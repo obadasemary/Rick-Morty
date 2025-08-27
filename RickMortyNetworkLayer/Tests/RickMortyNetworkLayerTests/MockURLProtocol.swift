@@ -1,0 +1,62 @@
+//
+//  MockURLProtocol.swift
+//  RickMortyNetworkLayer
+//
+//  Created by Abdelrahman Mohamed on 28.08.2025.
+//
+
+
+import Foundation
+
+@MainActor
+final class MockURLProtocol: URLProtocol {
+    
+    nonisolated(unsafe) static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data?))?
+    
+    override class func canInit(with request: URLRequest) -> Bool {
+        return true
+    }
+    
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        // Create a mutable copy to preserve all properties including the body
+        var canonicalRequest = request
+        
+        // Ensure the body is preserved
+        if let body = request.httpBody {
+            canonicalRequest.httpBody = body
+        }
+        
+        // Ensure method is preserved
+        if let method = request.httpMethod {
+            canonicalRequest.httpMethod = method
+        }
+        
+        // Ensure headers are preserved
+        if let headers = request.allHTTPHeaderFields {
+            canonicalRequest.allHTTPHeaderFields = headers
+        }
+        
+        return canonicalRequest
+    }
+    
+    override func startLoading() {
+        guard let handler = MockURLProtocol.requestHandler else {
+            fatalError("Handler is unavailable.")
+        }
+        
+        do {
+            let (response, data) = try handler(request)
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            
+            if let data = data {
+                client?.urlProtocol(self, didLoad: data)
+            }
+            
+            client?.urlProtocolDidFinishLoading(self)
+        } catch {
+            client?.urlProtocol(self, didFailWithError: error)
+        }
+    }
+    
+    override func stopLoading() {}
+}
