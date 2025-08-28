@@ -11,6 +11,7 @@ import RickMortyNetworkLayer
 import CoreAPI
 import RickMortyRepository
 import UseCase
+import FeedView
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     

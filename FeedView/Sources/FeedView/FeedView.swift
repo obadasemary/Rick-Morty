@@ -6,14 +6,17 @@
 //
 
 import SwiftUI
-import UseCase
-import DependencyContainer
+import DevPreview
 
-struct FeedView: View {
+public struct FeedView: View {
     
     @State var viewModel: FeedViewModel
     
-    var body: some View {
+    init(viewModel: FeedViewModel) {
+        self.viewModel = viewModel
+    }
+    
+    public var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack {
@@ -33,6 +36,8 @@ struct FeedView: View {
         }
     }
 }
+
+
 
 #Preview {
     let container = DevPreview.shared.container

@@ -2,6 +2,12 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:DevPreview">
+   </FileRef>
+   <FileRef
+      location = "group:FeedView">
+   </FileRef>
+   <FileRef
       location = "group:RickMortyRepository">
    </FileRef>
    <FileRef

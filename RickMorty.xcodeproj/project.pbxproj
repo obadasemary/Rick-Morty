@@ -12,6 +12,8 @@
 		AFC5770C2E6095CE00B3C3F0 /* RickMortyNetworkLayer in Frameworks */ = {isa = PBXBuildFile; productRef = AFC5770B2E6095CE00B3C3F0 /* RickMortyNetworkLayer */; };
 		AFC5770E2E6095CE00B3C3F0 /* RickMortyRepository in Frameworks */ = {isa = PBXBuildFile; productRef = AFC5770D2E6095CE00B3C3F0 /* RickMortyRepository */; };
 		AFC577102E6095CE00B3C3F0 /* UseCase in Frameworks */ = {isa = PBXBuildFile; productRef = AFC5770F2E6095CE00B3C3F0 /* UseCase */; };
+		AFC579842E611B6200B3C3F0 /* FeedView in Frameworks */ = {isa = PBXBuildFile; productRef = AFC579832E611B6200B3C3F0 /* FeedView */; };
+		AFC579862E611CF500B3C3F0 /* DevPreview in Frameworks */ = {isa = PBXBuildFile; productRef = AFC579852E611CF500B3C3F0 /* DevPreview */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,8 +63,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				AFC577082E6095CE00B3C3F0 /* CoreAPI in Frameworks */,
+				AFC579842E611B6200B3C3F0 /* FeedView in Frameworks */,
 				AFC5770C2E6095CE00B3C3F0 /* RickMortyNetworkLayer in Frameworks */,
 				AFC5770A2E6095CE00B3C3F0 /* DependencyContainer in Frameworks */,
+				AFC579862E611CF500B3C3F0 /* DevPreview in Frameworks */,
 				AFC5770E2E6095CE00B3C3F0 /* RickMortyRepository in Frameworks */,
 				AFC577102E6095CE00B3C3F0 /* UseCase in Frameworks */,
 			);
@@ -138,6 +142,8 @@
 				AFC5770B2E6095CE00B3C3F0 /* RickMortyNetworkLayer */,
 				AFC5770D2E6095CE00B3C3F0 /* RickMortyRepository */,
 				AFC5770F2E6095CE00B3C3F0 /* UseCase */,
+				AFC579832E611B6200B3C3F0 /* FeedView */,
+				AFC579852E611CF500B3C3F0 /* DevPreview */,
 			);
 			productName = RickMorty;
 			productReference = AFC576022E5F64BD00B3C3F0 /* RickMorty.app */;
@@ -607,6 +613,14 @@
 		AFC5770F2E6095CE00B3C3F0 /* UseCase */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = UseCase;
+		};
+		AFC579832E611B6200B3C3F0 /* FeedView */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FeedView;
+		};
+		AFC579852E611CF500B3C3F0 /* DevPreview */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DevPreview;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
