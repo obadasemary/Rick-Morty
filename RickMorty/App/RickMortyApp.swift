@@ -9,9 +9,13 @@ import SwiftUI
 
 @main
 struct RickMortyApp: App {
+    
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            delegate.feedBuilder.buildFeedView()
+                .environment(delegate.feedBuilder)
         }
     }
 }
