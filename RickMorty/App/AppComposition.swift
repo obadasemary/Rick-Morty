@@ -6,11 +6,10 @@
 //
 
 import Foundation
-import DependencyContainer
-import RickMortyNetworkLayer
-import CoreAPI
-import RickMortyRepository
 import UseCase
+import DependencyContainer
+import RickMortyRepository
+import RickMortyNetworkLayer
 
 @MainActor
 final class AppComposition {

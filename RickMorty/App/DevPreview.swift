@@ -5,13 +5,11 @@
 //  Created by Abdelrahman Mohamed on 28.08.2025.
 //
 
-import Foundation
 import SwiftUI
+import UseCase
+import RickMortyRepository
 import DependencyContainer
 import RickMortyNetworkLayer
-import CoreAPI
-import RickMortyRepository
-import UseCase
 
 @MainActor
 class DevPreview {
@@ -43,6 +41,8 @@ class DevPreview {
 extension View {
     func previewEnvironment() -> some View {
         self
-            
+            .environment(
+                FeedBuilder(container: DevPreview.shared.container)
+            )
     }
 }
