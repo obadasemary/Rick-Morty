@@ -8,21 +8,31 @@
 import SwiftUI
 import UseCase
 import DependencyContainer
+import DevPreview
 
 @Observable
 @MainActor
-final class FeedBuilder {
+public final class FeedBuilder {
     private let container: DIContainer
     
-    init(container: DIContainer) {
+    public init(container: DIContainer) {
         self.container = container
     }
     
-    func buildFeedView() -> some View {
+    public func buildFeedView() -> some View {
         FeedView(
             viewModel: FeedViewModel(
                 feedUseCase: FeedUseCase(container: container)
             )
         )
+    }
+}
+
+extension View {
+    func previewEnvironment() -> some View {
+        self
+            .environment(
+                FeedBuilder(container: DevPreview.shared.container)
+            )
     }
 }
