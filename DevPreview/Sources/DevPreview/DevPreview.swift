@@ -12,11 +12,11 @@ import DependencyContainer
 import RickMortyNetworkLayer
 
 @MainActor
-class DevPreview {
+public class DevPreview {
     
-    static let shared = DevPreview()
+    public static let shared = DevPreview()
     
-    var container: DIContainer {
+    public var container: DIContainer {
         
         let container = DIContainer()
         
@@ -35,14 +35,5 @@ class DevPreview {
         }
         
         return container
-    }
-}
-
-extension View {
-    func previewEnvironment() -> some View {
-        self
-            .environment(
-                FeedBuilder(container: DevPreview.shared.container)
-            )
     }
 }
