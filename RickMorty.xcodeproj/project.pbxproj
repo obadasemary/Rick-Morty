@@ -6,6 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		AFC577082E6095CE00B3C3F0 /* CoreAPI in Frameworks */ = {isa = PBXBuildFile; productRef = AFC577072E6095CE00B3C3F0 /* CoreAPI */; };
+		AFC5770A2E6095CE00B3C3F0 /* DependencyContainer in Frameworks */ = {isa = PBXBuildFile; productRef = AFC577092E6095CE00B3C3F0 /* DependencyContainer */; };
+		AFC5770C2E6095CE00B3C3F0 /* RickMortyNetworkLayer in Frameworks */ = {isa = PBXBuildFile; productRef = AFC5770B2E6095CE00B3C3F0 /* RickMortyNetworkLayer */; };
+		AFC5770E2E6095CE00B3C3F0 /* RickMortyRepository in Frameworks */ = {isa = PBXBuildFile; productRef = AFC5770D2E6095CE00B3C3F0 /* RickMortyRepository */; };
+		AFC577102E6095CE00B3C3F0 /* UseCase in Frameworks */ = {isa = PBXBuildFile; productRef = AFC5770F2E6095CE00B3C3F0 /* UseCase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		AFC576102E5F64BE00B3C3F0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +60,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AFC577082E6095CE00B3C3F0 /* CoreAPI in Frameworks */,
+				AFC5770C2E6095CE00B3C3F0 /* RickMortyNetworkLayer in Frameworks */,
+				AFC5770A2E6095CE00B3C3F0 /* DependencyContainer in Frameworks */,
+				AFC5770E2E6095CE00B3C3F0 /* RickMortyRepository in Frameworks */,
+				AFC577102E6095CE00B3C3F0 /* UseCase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +91,7 @@
 				AFC576042E5F64BD00B3C3F0 /* RickMorty */,
 				AFC576122E5F64BE00B3C3F0 /* RickMortyTests */,
 				AFC5761C2E5F64BE00B3C3F0 /* RickMortyUITests */,
+				AFC577062E6095CE00B3C3F0 /* Frameworks */,
 				AFC576032E5F64BD00B3C3F0 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,6 +104,13 @@
 				AFC576192E5F64BE00B3C3F0 /* RickMortyUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		AFC577062E6095CE00B3C3F0 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -112,6 +133,11 @@
 			);
 			name = RickMorty;
 			packageProductDependencies = (
+				AFC577072E6095CE00B3C3F0 /* CoreAPI */,
+				AFC577092E6095CE00B3C3F0 /* DependencyContainer */,
+				AFC5770B2E6095CE00B3C3F0 /* RickMortyNetworkLayer */,
+				AFC5770D2E6095CE00B3C3F0 /* RickMortyRepository */,
+				AFC5770F2E6095CE00B3C3F0 /* UseCase */,
 			);
 			productName = RickMorty;
 			productReference = AFC576022E5F64BD00B3C3F0 /* RickMorty.app */;
@@ -560,6 +586,29 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AFC577072E6095CE00B3C3F0 /* CoreAPI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CoreAPI;
+		};
+		AFC577092E6095CE00B3C3F0 /* DependencyContainer */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DependencyContainer;
+		};
+		AFC5770B2E6095CE00B3C3F0 /* RickMortyNetworkLayer */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RickMortyNetworkLayer;
+		};
+		AFC5770D2E6095CE00B3C3F0 /* RickMortyRepository */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RickMortyRepository;
+		};
+		AFC5770F2E6095CE00B3C3F0 /* UseCase */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = UseCase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AFC575FA2E5F64BD00B3C3F0 /* Project object */;
 }
