@@ -2,6 +2,15 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:RickMortyRepository">
+   </FileRef>
+   <FileRef
+      location = "group:DependencyContainer">
+   </FileRef>
+   <FileRef
+      location = "group:UseCase">
+   </FileRef>
+   <FileRef
       location = "group:CoreAPI">
    </FileRef>
    <FileRef
