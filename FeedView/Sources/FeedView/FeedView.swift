@@ -25,9 +25,13 @@ public struct FeedView: View {
                             .filterByStatus(filter.map{ $0.toCharacterStatus })
                     }
                     
-                    if let error = viewModel.errorMessage {
+                    switch viewModel.state {
+                    case .idle, .loading:
+                        ProgressView()
+                            .padding(.vertical, 24)
+                    case .error:
                         VStack(spacing: 12) {
-                            Text(error)
+                            Text(viewModel.errorMessage ?? "An error occurred")
                                 .multilineTextAlignment(.center)
                                 .foregroundStyle(.red)
                             Button("Retry") {
@@ -36,13 +40,9 @@ public struct FeedView: View {
                             .buttonStyle(.borderedProminent)
                         }
                         .padding(.vertical, 24)
-                    } else if viewModel.characters.isEmpty {
-                        ProgressView()
-                            .padding(.vertical, 24)
-                    } else {
+                    case .loaded, .loadingMore:
                         ForEach(viewModel.characters, id: \.id) { character in
                             NavigationLink {
-
                                 let detailsAdapter = CharacterDetailsAdapter(
                                     id: character.id,
                                     name: character.name,
@@ -51,7 +51,7 @@ public struct FeedView: View {
                                     gender: character.gender,
                                     image: character.image
                                 )
-
+                                
                                 characterDetailsBuilder
                                     .buildCharacterDetailsView(
                                         characterDetailsAdapter: detailsAdapter
