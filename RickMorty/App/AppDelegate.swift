@@ -12,6 +12,7 @@ import CoreAPI
 import RickMortyRepository
 import UseCase
 import FeedView
+import CharacterDetailsView
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     
@@ -19,6 +20,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     
     // Builders
     var feedBuilder: FeedBuilder!
+    var characterDetailsBuilder: CharacterDetailsBuilder!
     
     func application(
         _ application: UIApplication,
@@ -30,6 +32,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         
         // Register builders
         feedBuilder = FeedBuilder(container: composition.container)
+        characterDetailsBuilder = CharacterDetailsBuilder(container: composition.container)
         
         return true
     }

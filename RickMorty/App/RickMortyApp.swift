@@ -16,6 +16,7 @@ struct RickMortyApp: App {
         WindowGroup {
             delegate.feedBuilder.buildFeedView()
                 .environment(delegate.feedBuilder)
+                .environment(delegate.characterDetailsBuilder)
         }
     }
 }
