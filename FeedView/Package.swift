@@ -17,6 +17,8 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../UseCase"),
+        .package(path: "../CharacterDetailsView"),
+        .package(path: "../DependencyContainer"),
         .package(path: "../DevPreview")
     ],
     targets: [
@@ -26,6 +28,8 @@ let package = Package(
             name: "FeedView",
             dependencies: [
                 .product(name: "UseCase", package: "UseCase"),
+                .product(name: "CharacterDetailsView", package: "CharacterDetailsView"),
+                .product(name: "DependencyContainer", package: "DependencyContainer"),
                 .product(name: "DevPreview", package: "DevPreview")
             ]
         ),
