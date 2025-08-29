@@ -9,6 +9,7 @@ import SwiftUI
 import UseCase
 import DependencyContainer
 import DevPreview
+import CharacterDetailsView
 
 @Observable
 @MainActor
@@ -33,6 +34,9 @@ extension View {
         self
             .environment(
                 FeedBuilder(container: DevPreview.shared.container)
+            )
+            .environment(
+                CharacterDetailsBuilder(container: DevPreview.shared.container)
             )
     }
 }

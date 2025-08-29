@@ -7,22 +7,45 @@
 
 import SwiftUI
 import DevPreview
+import CharacterDetailsView
 
 public struct FeedView: View {
     
     @State var viewModel: FeedViewModel
-    
-    init(viewModel: FeedViewModel) {
-        self.viewModel = viewModel
-    }
+    @Environment(\.dismiss) private var dismiss
+    @Environment(CharacterDetailsBuilder.self) private var characterDetailsBuilder
     
     public var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack {
+                    FiltersView() { filter in
+//                      self?.viewModel.applyFilter(filter: filter)
+                    }
+                    
                     if let characters = viewModel.characters {
                         ForEach(characters.results, id: \.id) { character in
-                            CharacterView(character: character)
+                            NavigationLink {
+                                
+                                let detailsAdapter = CharacterDetailsAdapter(
+                                    id: character.id,
+                                    name: character.name,
+                                    status: character.status,
+                                    species: character.species,
+                                    gender: character.gender,
+                                    image: character.image
+                                )
+                                
+                                characterDetailsBuilder
+                                    .buildCharacterDetailsView(
+                                        characterDetailsAdapter: detailsAdapter
+                                    ) {
+                                        dismiss()
+                                    }
+                            } label: {
+                                CharacterView(character: character.toAdapter())
+                            }
+//                            CharacterView(character: character.toAdapter())
                         }
                     } else {
                         ProgressView()

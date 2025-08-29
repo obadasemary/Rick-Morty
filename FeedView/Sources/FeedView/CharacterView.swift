@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import UseCase
 
 private enum Constants {
     static let imageDimension: CGFloat = 80
@@ -16,7 +15,7 @@ private enum Constants {
 
 struct CharacterView: View {
     
-    let character: CharacterResponse
+    let character: CharacterAdapter
     
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -68,7 +67,8 @@ struct CharacterView: View {
             RoundedRectangle(cornerRadius: Constants.cardCornerRadius)
                 .stroke(borderColor, lineWidth: 1)
         )
-        .padding([.horizontal, .top])
+        .padding(.horizontal)
+        .padding(.top, 8)
     }
     
     private var backgroundColor: Color {
@@ -96,12 +96,11 @@ struct CharacterView: View {
 
 #Preview {
     CharacterView(
-        character: CharacterResponse(
+        character: CharacterAdapter(
             id: 1,
             name: "Obada",
-            status: .unknown,
+            status: .alive,
             species: "Human",
-            type: "",
             gender: .male,
             image: URL(string: "https://rickandmortyapi.com/api/character/avatar/1.jpeg")!,
         )
@@ -126,7 +125,6 @@ extension Color {
     }
     
     static let lightGray = Color.gray.opacity(0.3)
-    
 }
 
 
