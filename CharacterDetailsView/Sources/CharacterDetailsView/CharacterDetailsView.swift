@@ -113,21 +113,10 @@ public struct CharacterDetailsView: View {
     let container = DevPreview.shared.container
     let characterDetailsBuilder = CharacterDetailsBuilder(container: container)
     
-    let sample = CharacterDetailsAdapter(
-        id: 1,
-        name: "Obada",
-        status: .alive,
-        species: "Human",
-        type: "",
-        gender: .male,
-        image: URL(string: "https://rickandmortyapi.com/api/character/avatar/1.jpeg")!
-    )
     characterDetailsBuilder
         .buildCharacterDetailsView(
-            characterDetailsAdapter: sample,
-            backAction: {
-                
-            }
+            characterDetailsAdapter: CharacterDetailsAdapter.mock,
+            backAction: {}
         )
         .previewEnvironment()
 }
