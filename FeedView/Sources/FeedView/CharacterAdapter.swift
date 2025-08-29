@@ -26,7 +26,7 @@ public extension CharacterResponse {
             name: name,
             status: status,
             species: species,
-            gender: Gender(rawValue: gender.rawValue.capitalized) ?? .unknown,
+            gender: gender,
             image: image
         )
     }

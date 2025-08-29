@@ -69,9 +69,11 @@ public struct CharacterDetailsView: View {
                 .padding(.horizontal, 16)
                 
                 HStack {
-                    Text("\(viewModel.character.species) · \(viewModel.character.gender)")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                    Text(
+                        "\(viewModel.character.species) · \(viewModel.character.gender.rawValue.capitalized)"
+                    )
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
                     
                     Spacer()
                 }
