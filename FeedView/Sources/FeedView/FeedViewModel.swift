@@ -7,28 +7,139 @@
 
 import Foundation
 import UseCase
+import RickMortyNetworkLayer
 
 @Observable
 @MainActor
-class FeedViewModel {
-    
+final class FeedViewModel {
+    // MARK: - State
+    enum State {
+        case idle
+        case loading
+//        case loaded([CharacterResponse])
+        case loaded([CharacterAdapter])
+        case error(Error)
+//        case loadingMore([CharacterResponse])
+        case loadingMore([CharacterAdapter])
+    }
+
+    // MARK: - Published Properties
+//    private(set) var characters: [CharacterResponse] = []
+    private(set) var characters: [CharacterAdapter] = []
+    private(set) var currentPage: Int = 1
+    private(set) var hasMorePages: Bool = true
+    private(set) var selectedStatus: Status? = nil
+    private(set) var state: State = .idle
+
+    // Loading guard
+    private var isLoading: Bool = false
+
+    // MARK: - Dependencies
     private let feedUseCase: FeedUseCaseProtocol
-    
-    // Internal for testing, private(set) for external access
-    internal private(set) var characters: CharactersPageResponse? = nil
-    
+
+    // MARK: - Initialization
     init(feedUseCase: FeedUseCaseProtocol) {
         self.feedUseCase = feedUseCase
     }
+
+    // MARK: - Public Methods
+    func loadInitialData() {
+        guard case .idle = state else { return }
+        Task { [weak self] in
+            await self?.fetchCharacters(page: 1, status: self?.selectedStatus)
+        }
+    }
+
+    func refreshData() {
+        currentPage = 1
+        hasMorePages = true
+        characters = []
+        state = .loading
+        Task { [weak self] in
+            await self?.fetchCharacters(page: 1, status: self?.selectedStatus)
+        }
+    }
+
+    func loadMoreData() {
+        guard hasMorePages && !isLoading else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            await self.fetchCharacters(page: self.currentPage + 1, status: self.selectedStatus)
+        }
+    }
+
+    func filterByStatus(_ status: Status?) {
+        selectedStatus = status
+        currentPage = 1
+        hasMorePages = true
+        characters = []
+        state = .loading
+        Task { [weak self] in
+            await self?.fetchCharacters(page: 1, status: status)
+        }
+    }
+
+    // MARK: - Private Methods
+    private func fetchCharacters(page: Int, status: Status?) async {
+        guard !isLoading else { return }
+        isLoading = true
+
+        if page == 1 {
+            state = .loading
+        } else {
+            state = .loadingMore(characters)
+        }
+
+        do {
+            let response = try await feedUseCase.execute(page: page, status: status?.rawValue)
+
+            if page == 1 {
+//                characters = response.results
+                characters = response.results.map { $0.toAdapter() }
+            } else {
+//                characters.append(contentsOf: response.results)
+                characters.append(contentsOf: response.results.map { $0.toAdapter() })
+            }
+
+            currentPage = page
+            hasMorePages = response.info.next != nil
+            state = .loaded(characters)
+        } catch {
+            if page == 1 {
+                state = .error(error)
+            } else {
+                // Keep existing data on pagination error
+                state = .loaded(characters)
+            }
+        }
+
+        isLoading = false
+    }
 }
 
+// MARK: - Error Handling
 extension FeedViewModel {
-    
-    func fetchCharacters() async {
-        do {
-            characters = try await feedUseCase.execute(page: 1, status: nil)
-        } catch {
-            print("Failed to fetch characters: \(error)")
+    var errorMessage: String? {
+        guard case .error(let error) = state else { return nil }
+
+        if let networkError = error as? NetworkError {
+            switch networkError {
+            case .networkError:
+                return "Network connection error. Please check your internet connection."
+            case .serverError(let statusCode):
+                return "Server error (Status: \(statusCode)). Please try again later."
+            case .decodingError:
+                return "Data format error. Please try again."
+            case .invalidURL, .invalidResponse:
+                return "Invalid response from server. Please try again."
+            }
         }
+
+        return error.localizedDescription
+    }
+
+    var isLoadingMore: Bool {
+        guard case .loadingMore = state else { return false }
+        return true
     }
 }

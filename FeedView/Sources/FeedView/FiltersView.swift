@@ -7,12 +7,6 @@
 
 import SwiftUI
 
-enum Filter: CaseIterable, Equatable {
-    case alive
-    case dead
-    case unknown
-}
-
 public struct FiltersView: View {
     
     @State private var selectedFilter: Filter?
