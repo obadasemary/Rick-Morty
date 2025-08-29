@@ -8,6 +8,7 @@
 import SwiftUI
 import DevPreview
 import CharacterDetailsView
+import UseCase
 
 public struct FeedView: View {
     
@@ -20,13 +21,28 @@ public struct FeedView: View {
             ScrollView {
                 LazyVStack {
                     FiltersView() { filter in
-//                      self?.viewModel.applyFilter(filter: filter)
+                        viewModel
+                            .filterByStatus(filter.map{ $0.toCharacterStatus })
                     }
                     
-                    if let characters = viewModel.characters {
-                        ForEach(characters.results, id: \.id) { character in
+                    if let error = viewModel.errorMessage {
+                        VStack(spacing: 12) {
+                            Text(error)
+                                .multilineTextAlignment(.center)
+                                .foregroundStyle(.red)
+                            Button("Retry") {
+                                viewModel.refreshData()
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
+                        .padding(.vertical, 24)
+                    } else if viewModel.characters.isEmpty {
+                        ProgressView()
+                            .padding(.vertical, 24)
+                    } else {
+                        ForEach(viewModel.characters, id: \.id) { character in
                             NavigationLink {
-                                
+
                                 let detailsAdapter = CharacterDetailsAdapter(
                                     id: character.id,
                                     name: character.name,
@@ -35,7 +51,7 @@ public struct FeedView: View {
                                     gender: character.gender,
                                     image: character.image
                                 )
-                                
+
                                 characterDetailsBuilder
                                     .buildCharacterDetailsView(
                                         characterDetailsAdapter: detailsAdapter
@@ -43,22 +59,34 @@ public struct FeedView: View {
                                         dismiss()
                                     }
                             } label: {
-                                CharacterView(character: character.toAdapter())
+                                CharacterView(character: character)
                             }
-//                            CharacterView(character: character.toAdapter())
+                            .onAppear {
+                                // Infinite scroll trigger when the last item appears
+                                if character.id == viewModel.characters.last?.id {
+                                    viewModel.loadMoreData()
+                                }
+                            }
                         }
-                    } else {
-                        ProgressView()
+
+                        if viewModel.isLoadingMore {
+                            ProgressView()
+                                .padding(.vertical, 16)
+                        }
                     }
                 }
+            }
+            .refreshable {
+                viewModel.refreshData()
             }
             .navigationTitle("Characters")
         }
         .task {
-            await viewModel.fetchCharacters()
+            viewModel.loadInitialData()
         }
     }
 }
+
 
 
 

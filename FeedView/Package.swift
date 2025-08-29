@@ -17,6 +17,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../UseCase"),
+        .package(path: "../RickMortyNetworkLayer"),
         .package(path: "../CharacterDetailsView"),
         .package(path: "../DependencyContainer"),
         .package(path: "../DevPreview")
@@ -30,7 +31,8 @@ let package = Package(
                 .product(name: "UseCase", package: "UseCase"),
                 .product(name: "CharacterDetailsView", package: "CharacterDetailsView"),
                 .product(name: "DependencyContainer", package: "DependencyContainer"),
-                .product(name: "DevPreview", package: "DevPreview")
+                .product(name: "DevPreview", package: "DevPreview"),
+                .product(name: "RickMortyNetworkLayer", package: "RickMortyNetworkLayer")
             ]
         ),
         .testTarget(
