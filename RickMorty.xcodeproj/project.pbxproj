@@ -14,6 +14,7 @@
 		AFC577102E6095CE00B3C3F0 /* UseCase in Frameworks */ = {isa = PBXBuildFile; productRef = AFC5770F2E6095CE00B3C3F0 /* UseCase */; };
 		AFC579842E611B6200B3C3F0 /* FeedView in Frameworks */ = {isa = PBXBuildFile; productRef = AFC579832E611B6200B3C3F0 /* FeedView */; };
 		AFC579862E611CF500B3C3F0 /* DevPreview in Frameworks */ = {isa = PBXBuildFile; productRef = AFC579852E611CF500B3C3F0 /* DevPreview */; };
+		AFC579882E612AE800B3C3F0 /* CharacterDetailsView in Frameworks */ = {isa = PBXBuildFile; productRef = AFC579872E612AE800B3C3F0 /* CharacterDetailsView */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,6 +65,7 @@
 			files = (
 				AFC577082E6095CE00B3C3F0 /* CoreAPI in Frameworks */,
 				AFC579842E611B6200B3C3F0 /* FeedView in Frameworks */,
+				AFC579882E612AE800B3C3F0 /* CharacterDetailsView in Frameworks */,
 				AFC5770C2E6095CE00B3C3F0 /* RickMortyNetworkLayer in Frameworks */,
 				AFC5770A2E6095CE00B3C3F0 /* DependencyContainer in Frameworks */,
 				AFC579862E611CF500B3C3F0 /* DevPreview in Frameworks */,
@@ -144,6 +146,7 @@
 				AFC5770F2E6095CE00B3C3F0 /* UseCase */,
 				AFC579832E611B6200B3C3F0 /* FeedView */,
 				AFC579852E611CF500B3C3F0 /* DevPreview */,
+				AFC579872E612AE800B3C3F0 /* CharacterDetailsView */,
 			);
 			productName = RickMorty;
 			productReference = AFC576022E5F64BD00B3C3F0 /* RickMorty.app */;
@@ -621,6 +624,10 @@
 		AFC579852E611CF500B3C3F0 /* DevPreview */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = DevPreview;
+		};
+		AFC579872E612AE800B3C3F0 /* CharacterDetailsView */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CharacterDetailsView;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
