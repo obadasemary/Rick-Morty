@@ -12,7 +12,6 @@ import DevPreview
 public struct CharacterDetailsView: View {
     
     @State var viewModel: CharacterDetailsViewModel
-    @Environment(\.dismiss) private var dismiss
     
     public var body: some View {
         ScrollView {
@@ -32,19 +31,27 @@ public struct CharacterDetailsView: View {
                     .clipped()
                     .cornerRadius(20)
                     
-                    // Back button overlay
-                    Button(action: { dismiss() }) {
-                        Image(systemName: "arrow.left")
-                            .foregroundColor(.black)
-                            .frame(width: 40, height: 40)
-                            .background(Color.white.opacity(0.8))
-                            .clipShape(Circle())
-                    }
+                    Button(
+                        action: {
+                            viewModel.back()
+                        },
+                        label: {
+                            Image(systemName: "arrow.left")
+                                .foregroundColor(.black)
+                                .frame(width: 40, height: 40)
+                                .background(Color.white.opacity(0.8))
+                                .clipShape(Circle())
+                        }
+                    )
                     .padding(.leading, 16)
                     .padding(.top, 16)
-                    .padding(.top, UIApplication.shared.connectedScenes
-                        .compactMap { ($0 as? UIWindowScene)?.keyWindow }
-                        .first?.safeAreaInsets.top ?? 0
+                    .padding(
+                        .top,
+                        UIApplication
+                            .shared
+                            .connectedScenes
+                            .compactMap { ($0 as? UIWindowScene)?.keyWindow }
+                            .first?.safeAreaInsets.top ?? 0
                     )
                     .shadow(radius: 3)
                 }

@@ -10,7 +10,7 @@ import UseCase
 
 @Observable
 @MainActor
-class CharacterDetailsViewModel {
+final class CharacterDetailsViewModel {
     
     private let feedUseCase: FeedUseCaseProtocol
     

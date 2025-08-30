@@ -8,6 +8,7 @@
 import Foundation
 import UseCase
 import RickMortyNetworkLayer
+import CharacterDetailsView
 
 @Observable
 @MainActor
@@ -36,10 +37,15 @@ final class FeedViewModel {
 
     // MARK: - Dependencies
     private let feedUseCase: FeedUseCaseProtocol
+    private let router: FeedRouterProtocol
 
     // MARK: - Initialization
-    init(feedUseCase: FeedUseCaseProtocol) {
+    init(
+        feedUseCase: FeedUseCaseProtocol,
+        router: FeedRouterProtocol
+    ) {
         self.feedUseCase = feedUseCase
+        self.router = router
     }
 
     // MARK: - Public Methods
@@ -79,8 +85,15 @@ final class FeedViewModel {
         }
     }
 
-    // MARK: - Private Methods
-    private func fetchCharacters(page: Int, status: Status?) async {
+    func openCharacterDetail(for character: CharacterDetailsAdapter) {
+        router.showCharacterDetails(characterDetailsAdapter: character)
+    }
+}
+
+// MARK: - Private Methods
+private extension FeedViewModel {
+ 
+    func fetchCharacters(page: Int, status: Status?) async {
         guard !isLoading else { return }
         isLoading = true
 
@@ -94,10 +107,8 @@ final class FeedViewModel {
             let response = try await feedUseCase.execute(page: page, status: status?.rawValue)
 
             if page == 1 {
-//                characters = response.results
                 characters = response.results.map { $0.toAdapter() }
             } else {
-//                characters.append(contentsOf: response.results)
                 characters.append(contentsOf: response.results.map { $0.toAdapter() })
             }
 
