@@ -16,6 +16,7 @@ let package = Package(
         ),
     ],
     dependencies: [
+        .package(url: "https://github.com/obadasemary/SUIRouting.git", .upToNextMajor(from: "1.0.6")),
         .package(path: "../UseCase"),
         .package(path: "../RickMortyNetworkLayer"),
         .package(path: "../CharacterDetailsView"),
@@ -28,6 +29,7 @@ let package = Package(
         .target(
             name: "FeedView",
             dependencies: [
+                .product(name: "SUIRouting", package: "SUIRouting"),
                 .product(name: "UseCase", package: "UseCase"),
                 .product(name: "CharacterDetailsView", package: "CharacterDetailsView"),
                 .product(name: "DependencyContainer", package: "DependencyContainer"),

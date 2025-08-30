@@ -10,6 +10,7 @@ import UseCase
 import DependencyContainer
 import DevPreview
 import CharacterDetailsView
+import SUIRouting
 
 @Observable
 @MainActor
@@ -20,10 +21,16 @@ public final class FeedBuilder {
         self.container = container
     }
     
-    public func buildFeedView() -> some View {
+    public func buildFeedView(router: Router) -> some View {
         FeedView(
             viewModel: FeedViewModel(
-                feedUseCase: FeedUseCase(container: container)
+                feedUseCase: FeedUseCase(container: container),
+                router: FeedRouter(
+                    router: router,
+                    characterDetailsBuilder: CharacterDetailsBuilder(
+                        container: container
+                    )
+                )
             )
         )
     }

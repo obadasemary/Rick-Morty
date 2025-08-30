@@ -7,12 +7,12 @@
 
 import SwiftUI
 
-public struct FiltersView: View {
+struct FiltersView: View {
     
     @State private var selectedFilter: Filter?
     var onFilterChanged: ((Filter?) -> Void)?
     
-    public var body: some View {
+    var body: some View {
         HStack {
             HStack(spacing: 12) {
                 ForEach(Filter.allCases, id: \.self) { filter in

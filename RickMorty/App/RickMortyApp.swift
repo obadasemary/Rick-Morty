@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SUIRouting
 
 @main
 struct RickMortyApp: App {
@@ -14,9 +15,11 @@ struct RickMortyApp: App {
     
     var body: some Scene {
         WindowGroup {
-            delegate.feedBuilder.buildFeedView()
-                .environment(delegate.feedBuilder)
-                .environment(delegate.characterDetailsBuilder)
+            RouterView { router in
+                delegate.feedBuilder.buildFeedView(router: router)
+            }
+            .environment(delegate.feedBuilder)
+            .environment(delegate.characterDetailsBuilder)
         }
     }
 }
