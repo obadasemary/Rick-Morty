@@ -13,7 +13,6 @@ typealias RouterView = SUIRouting.RouterView
 @MainActor
 protocol FeedRouterProtocol {
     func showCharacterDetails(characterDetailsAdapter: CharacterDetailsAdapter)
-    func dismissScreen()
 }
 
 @MainActor
@@ -36,9 +35,5 @@ extension FeedRouter: FeedRouterProtocol {
                     }
                 )
         }
-    }
-    
-    func dismissScreen() {
-        router.dismissScreen()
     }
 }

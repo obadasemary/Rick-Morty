@@ -17,15 +17,12 @@ final class FeedViewModel {
     enum State {
         case idle
         case loading
-//        case loaded([CharacterResponse])
         case loaded([CharacterAdapter])
         case error(Error)
-//        case loadingMore([CharacterResponse])
         case loadingMore([CharacterAdapter])
     }
 
     // MARK: - Published Properties
-//    private(set) var characters: [CharacterResponse] = []
     private(set) var characters: [CharacterAdapter] = []
     private(set) var currentPage: Int = 1
     private(set) var hasMorePages: Bool = true
