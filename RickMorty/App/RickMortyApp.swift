@@ -16,10 +16,24 @@ struct RickMortyApp: App {
     var body: some Scene {
         WindowGroup {
             RouterView { router in
-                delegate.feedBuilder.buildFeedView(router: router)
+                FeedViewControllerWrapper(
+                    viewController: delegate.feedBuilder.buildFeedViewController(router: router)
+                )
             }
             .environment(delegate.feedBuilder)
             .environment(delegate.characterDetailsBuilder)
         }
+    }
+}
+
+struct FeedViewControllerWrapper: UIViewControllerRepresentable {
+    let viewController: UIViewController
+    
+    func makeUIViewController(context: Context) -> UIViewController {
+        return viewController
+    }
+    
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        // No updates needed
     }
 }

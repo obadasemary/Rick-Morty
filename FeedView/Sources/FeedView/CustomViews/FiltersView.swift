@@ -6,51 +6,122 @@
 //
 
 import SwiftUI
+import UseCase
+import RickMortyUI
 
 struct FiltersView: View {
     
-    @State private var selectedFilter: Filter?
-    var onFilterChanged: ((Filter?) -> Void)?
+    // MARK: - Properties
+    let onFilterApplied: (Filter?) -> Void
+    @State private var selectedStatus: Status?
+    @Environment(\.dismiss) private var dismiss
     
+    // MARK: - Body
     var body: some View {
-        HStack {
-            HStack(spacing: 12) {
-                ForEach(Filter.allCases, id: \.self) { filter in
-                    Text(title(for: filter))
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 16)
-                        .background(
-                            selectedFilter == filter ? Color.blue : Color.gray.opacity(0.2)
-                        )
-                        .foregroundColor(selectedFilter == filter ? .white : .primary)
-                        .clipShape(Capsule())
-                        .onTapGesture {
-                            if selectedFilter == filter {
-                                selectedFilter = nil
-                            } else {
-                                selectedFilter = filter
-                            }
-                            onFilterChanged?(selectedFilter)
-                        }
-                }
+        NavigationView {
+            VStack(spacing: 24) {
+                statusSection
                 Spacer()
+                actionButtons
             }
-            Spacer()
+            .padding(24)
+            .navigationTitle("Filters")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
         }
-        .padding()
     }
     
-    private func title(for filter: Filter) -> String {
-        switch filter {
-        case .alive: return "Alive"
-        case .dead: return "Dead"
-        case .unknown: return "Unknown"
+    // MARK: - View Components
+    private var statusSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Status")
+                .font(.headline)
+                .foregroundColor(.primary)
+            
+            HStack(spacing: 12) {
+                ForEach(Filter.allCases, id: \.self) { filter in
+                    StatusFilterButton(
+                        status: filter.toCharacterStatus,
+                        isSelected: selectedStatus == filter.toCharacterStatus
+                    ) {
+                        if selectedStatus == filter.toCharacterStatus {
+                            selectedStatus = nil
+                        } else {
+                            selectedStatus = filter.toCharacterStatus
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private var actionButtons: some View {
+        VStack(spacing: 16) {
+            Button("Apply Filters") {
+                let filter = selectedStatus.flatMap { status in
+                    Filter.allCases.first { $0.toCharacterStatus == status }
+                }
+                onFilterApplied(filter)
+                dismiss()
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(selectedStatus == nil)
+            
+            Button("Reset") {
+                selectedStatus = nil
+            }
+            .buttonStyle(.bordered)
         }
     }
 }
 
-struct FiltersView_Previews: PreviewProvider {
-    static var previews: some View {
-        FiltersView()
+// MARK: - Status Filter Button
+struct StatusFilterButton: View {
+    let status: Status
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(status.rawValue.capitalized)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(isSelected ? .white : .primary)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(isSelected ? statusColor(for: status) : Color(UIColor.systemGray5))
+                )
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private func statusColor(for status: Status) -> Color {
+        switch status {
+        case .alive:
+            return .green
+        case .dead:
+            return .red
+        case .unknown:
+            return .gray
+        }
+    }
+}
+
+// MARK: - Preview
+#Preview {
+    FiltersView { filter in
+        if let filter = filter {
+            print("Filter applied: \(filter.toCharacterStatus.rawValue)")
+        } else {
+            print("No filter applied")
+        }
     }
 }

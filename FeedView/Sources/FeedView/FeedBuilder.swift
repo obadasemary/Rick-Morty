@@ -5,7 +5,7 @@
 //  Created by Abdelrahman Mohamed on 28.08.2025.
 //
 
-import SwiftUI
+import UIKit
 import UseCase
 import DependencyContainer
 import DevPreview
@@ -21,29 +21,19 @@ public final class FeedBuilder {
         self.container = container
     }
     
-    public func buildFeedView(router: Router) -> some View {
-        FeedView(
-            viewModel: FeedViewModel(
-                feedUseCase: FeedUseCase(container: container),
-                router: FeedRouter(
-                    router: router,
-                    characterDetailsBuilder: CharacterDetailsBuilder(
-                        container: container
-                    )
+    public func buildFeedViewController(router: Router) -> UIViewController {
+        let viewModel = FeedViewModel(
+            feedUseCase: FeedUseCase(container: container),
+            router: FeedRouter(
+                router: router,
+                characterDetailsBuilder: CharacterDetailsBuilder(
+                    container: container
                 )
             )
         )
-    }
-}
-
-extension View {
-    func previewEnvironment() -> some View {
-        self
-            .environment(
-                FeedBuilder(container: DevPreview.shared.container)
-            )
-            .environment(
-                CharacterDetailsBuilder(container: DevPreview.shared.container)
-            )
+        
+        let feedViewController = FeedViewController(viewModel: viewModel)
+        let navigationController = UINavigationController(rootViewController: feedViewController)
+        return navigationController
     }
 }
