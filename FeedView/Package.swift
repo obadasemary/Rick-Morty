@@ -16,12 +16,13 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/obadasemary/SUIRouting.git", .upToNextMajor(from: "1.0.6")),
         .package(path: "../UseCase"),
-        .package(path: "../RickMortyNetworkLayer"),
-        .package(path: "../CharacterDetailsView"),
+        .package(path: "../DevPreview"),
+        .package(path: "../RickMortyUI"),
         .package(path: "../DependencyContainer"),
-        .package(path: "../DevPreview")
+        .package(path: "../CharacterDetailsView"),
+        .package(path: "../RickMortyNetworkLayer"),
+        .package(url: "https://github.com/obadasemary/SUIRouting.git", .upToNextMajor(from: "1.0.6"))
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -29,11 +30,12 @@ let package = Package(
         .target(
             name: "FeedView",
             dependencies: [
-                .product(name: "SUIRouting", package: "SUIRouting"),
                 .product(name: "UseCase", package: "UseCase"),
-                .product(name: "CharacterDetailsView", package: "CharacterDetailsView"),
-                .product(name: "DependencyContainer", package: "DependencyContainer"),
                 .product(name: "DevPreview", package: "DevPreview"),
+                .product(name: "SUIRouting", package: "SUIRouting"),
+                .product(name: "RickMortyUI", package: "RickMortyUI"),
+                .product(name: "DependencyContainer", package: "DependencyContainer"),
+                .product(name: "CharacterDetailsView", package: "CharacterDetailsView"),
                 .product(name: "RickMortyNetworkLayer", package: "RickMortyNetworkLayer")
             ]
         ),

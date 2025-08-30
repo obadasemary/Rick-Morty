@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		AF0906A82E63A12700156C00 /* SUIRouting in Frameworks */ = {isa = PBXBuildFile; productRef = AF0906A72E63A12700156C00 /* SUIRouting */; };
+		AF3E26652E63B5CB00B918F1 /* RickMortyUI in Frameworks */ = {isa = PBXBuildFile; productRef = AF3E26642E63B5CB00B918F1 /* RickMortyUI */; };
 		AFC577082E6095CE00B3C3F0 /* CoreAPI in Frameworks */ = {isa = PBXBuildFile; productRef = AFC577072E6095CE00B3C3F0 /* CoreAPI */; };
 		AFC5770A2E6095CE00B3C3F0 /* DependencyContainer in Frameworks */ = {isa = PBXBuildFile; productRef = AFC577092E6095CE00B3C3F0 /* DependencyContainer */; };
 		AFC5770C2E6095CE00B3C3F0 /* RickMortyNetworkLayer in Frameworks */ = {isa = PBXBuildFile; productRef = AFC5770B2E6095CE00B3C3F0 /* RickMortyNetworkLayer */; };
@@ -65,6 +66,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AFC577082E6095CE00B3C3F0 /* CoreAPI in Frameworks */,
+				AF3E26652E63B5CB00B918F1 /* RickMortyUI in Frameworks */,
 				AFC579842E611B6200B3C3F0 /* FeedView in Frameworks */,
 				AFC579882E612AE800B3C3F0 /* CharacterDetailsView in Frameworks */,
 				AFC5770C2E6095CE00B3C3F0 /* RickMortyNetworkLayer in Frameworks */,
@@ -150,6 +152,7 @@
 				AFC579852E611CF500B3C3F0 /* DevPreview */,
 				AFC579872E612AE800B3C3F0 /* CharacterDetailsView */,
 				AF0906A72E63A12700156C00 /* SUIRouting */,
+				AF3E26642E63B5CB00B918F1 /* RickMortyUI */,
 			);
 			productName = RickMorty;
 			productReference = AFC576022E5F64BD00B3C3F0 /* RickMorty.app */;
@@ -618,6 +621,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AF0906A62E63A12700156C00 /* XCRemoteSwiftPackageReference "SUIRouting" */;
 			productName = SUIRouting;
+		};
+		AF3E26642E63B5CB00B918F1 /* RickMortyUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RickMortyUI;
 		};
 		AFC577072E6095CE00B3C3F0 /* CoreAPI */ = {
 			isa = XCSwiftPackageProductDependency;

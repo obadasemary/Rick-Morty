@@ -17,8 +17,9 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../UseCase"),
-        .package(path: "../DependencyContainer"),
-        .package(path: "../DevPreview")
+        .package(path: "../DevPreview"),
+        .package(path: "../RickMortyUI"),
+        .package(path: "../DependencyContainer")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -27,8 +28,9 @@ let package = Package(
             name: "CharacterDetailsView",
             dependencies: [
                 .product(name: "UseCase", package: "UseCase"),
-                .product(name: "DependencyContainer", package: "DependencyContainer"),
-                .product(name: "DevPreview", package: "DevPreview")
+                .product(name: "DevPreview", package: "DevPreview"),
+                .product(name: "RickMortyUI", package: "RickMortyUI"),
+                .product(name: "DependencyContainer", package: "DependencyContainer")
             ]
         ),
         .testTarget(
