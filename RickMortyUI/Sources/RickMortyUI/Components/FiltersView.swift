@@ -1,21 +1,28 @@
 //
 //  FiltersView.swift
-//  FeedView
+//  RickMortyUI
 //
-//  Created by Abdelrahman Mohamed on 29.08.2025.
+//  Created by Abdelrahman Mohamed on 01.09.2025.
 //
 
 import SwiftUI
+import UseCase
 
-struct FiltersView: View {
+public struct FiltersView: View {
     
-    @State private var selectedFilter: Filter?
-    var onFilterChanged: ((Filter?) -> Void)?
+    @State private var selectedFilter: FilterAdapter?
+    public var onFilterChanged: ((FilterAdapter?) -> Void)?
     
-    var body: some View {
+    public init(
+        onFilterChanged: ((FilterAdapter?) -> Void)? = nil
+    ) {
+        self.onFilterChanged = onFilterChanged
+    }
+    
+    public var body: some View {
         HStack {
             HStack(spacing: 12) {
-                ForEach(Filter.allCases, id: \.self) { filter in
+                ForEach(FilterAdapter.allCases, id: \.self) { filter in
                     Text(title(for: filter))
                         .padding(.vertical, 8)
                         .padding(.horizontal, 16)
@@ -40,7 +47,7 @@ struct FiltersView: View {
         .padding()
     }
     
-    private func title(for filter: Filter) -> String {
+    private func title(for filter: FilterAdapter) -> String {
         switch filter {
         case .alive: return "Alive"
         case .dead: return "Dead"

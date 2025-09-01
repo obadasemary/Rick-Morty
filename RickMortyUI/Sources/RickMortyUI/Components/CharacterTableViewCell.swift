@@ -1,18 +1,22 @@
 //
 //  CharacterTableViewCell.swift
-//  FeedView
+//  RickMortyUI
 //
-//  Created by Abdelrahman Mohamed on 31.08.2025.
+//  Created by Abdelrahman Mohamed on 01.09.2025.
 //
 
 import UIKit
 import SwiftUI
+import UseCase
 
-class CharacterTableViewCell: UITableViewCell {
+public class CharacterTableViewCell: UITableViewCell {
     
     private var hostingController: UIHostingController<CharacterView>?
     
-    func set(character: CharacterAdapter, viewController: UIViewController) {
+    public func set(
+        character: CharacterAdapter,
+        viewController: UIViewController
+    ) {
         
         hostingController?.willMove(toParent: nil)
         hostingController?.view.removeFromSuperview()

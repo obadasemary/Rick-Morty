@@ -1,12 +1,12 @@
 //
 //  CharacterView.swift
-//  RickMorty
+//  RickMortyUI
 //
-//  Created by Abdelrahman Mohamed on 28.08.2025.
+//  Created by Abdelrahman Mohamed on 01.09.2025.
 //
 
 import SwiftUI
-import RickMortyUI
+import UseCase
 
 private enum Constants {
     static let imageDimension: CGFloat = 80
@@ -14,11 +14,15 @@ private enum Constants {
     static let imageCornerRadius: CGFloat = 8
 }
 
-struct CharacterView: View {
+public struct CharacterView: View {
     
     let character: CharacterAdapter
     
-    var body: some View {
+    public init(character: CharacterAdapter) {
+        self.character = character
+    }
+    
+    public var body: some View {
         HStack(alignment: .top, spacing: 12) {
             AsyncImage(url: character.image) { phase in
                 switch phase {
