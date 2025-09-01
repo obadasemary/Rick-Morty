@@ -19,6 +19,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     var composition: AppComposition!
     
     // Builders
+    var tabBarBuilder: TabBarBuilder!
     var feedBuilder: FeedBuilder!
     var characterDetailsBuilder: CharacterDetailsBuilder!
     
@@ -31,6 +32,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         composition = AppComposition()
         
         // Register builders
+        tabBarBuilder = TabBarBuilder(container: composition.container)
         feedBuilder = FeedBuilder(container: composition.container)
         characterDetailsBuilder = CharacterDetailsBuilder(container: composition.container)
         
