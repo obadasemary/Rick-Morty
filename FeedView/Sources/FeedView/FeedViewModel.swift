@@ -7,7 +7,6 @@
 
 import Foundation
 import UseCase
-import RickMortyNetworkLayer
 
 @Observable
 @MainActor
@@ -18,7 +17,7 @@ final class FeedViewModel {
         case idle
         case loading
         case loaded([CharacterAdapter])
-        case error(Error)
+        case error(FeedError)
         case loadingMore([CharacterAdapter])
     }
     
@@ -64,7 +63,7 @@ final class FeedViewModel {
     }
 
     func loadMoreData() {
-        print("loadMore? page=\(currentPage) hasMore=\(hasMorePages) isLoading=\(isLoading)")
+        print("loadMore? page = \(currentPage) hasMore = \(hasMorePages) isLoading = \(isLoading)")
         guard hasMorePages && !isLoading else { return }
         Task { [weak self] in
             guard let self else { return }
@@ -120,7 +119,7 @@ private extension FeedViewModel {
             state = .loaded(characters)
         } catch {
             if page == 1 {
-                state = .error(error)
+                state = .error(mapError(error))
             } else {
                 // Keep existing data on pagination error
                 state = .loaded(characters)
@@ -133,23 +132,41 @@ private extension FeedViewModel {
 
 // MARK: - Error Handling
 extension FeedViewModel {
+    
+    func mapError(_ error: Error) -> FeedError {
+        // Network connectivity
+        if error is URLError { return .network }
+        // JSON decoding / parsing
+        if error is DecodingError { return .decoding }
+        
+        let nsError = error as NSError
+        // Try to extract an HTTP status code if upstream attached it
+        if let status = nsError.userInfo["HTTPStatusCode"] as? Int {
+            return .server(status: status)
+        }
+        
+        // If we can’t classify it, surface a safe message
+        if let desc = (error as? LocalizedError)?.errorDescription, !desc.isEmpty {
+            return .unknown(message: desc)
+        }
+        return .unknown(message: nsError.localizedDescription)
+    }
+    
     var errorMessage: String? {
         guard case .error(let error) = state else { return nil }
-
-        if let networkError = error as? NetworkError {
-            switch networkError {
-            case .networkError:
-                return "Network connection error. Please check your internet connection."
-            case .serverError(let statusCode):
-                return "Server error (Status: \(statusCode)). Please try again later."
-            case .decodingError:
-                return "Data format error. Please try again."
-            case .invalidURL, .invalidResponse:
-                return "Invalid response from server. Please try again."
-            }
+        switch error {
+        case .network:
+            return "Network connection error. Please check your internet connection."
+        case .server(let status):
+            if let status { return "Server error (Status: \(status)). Please try again later." }
+            return "Server error. Please try again later."
+        case .decoding:
+            return "Data format error. Please try again."
+        case .invalidResponse:
+            return "Invalid response from server. Please try again."
+        case .unknown(let message):
+            return message
         }
-
-        return error.localizedDescription
     }
 
     var isLoadingMore: Bool {
