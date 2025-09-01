@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		AF0906A82E63A12700156C00 /* SUIRouting in Frameworks */ = {isa = PBXBuildFile; productRef = AF0906A72E63A12700156C00 /* SUIRouting */; };
 		AF3E26652E63B5CB00B918F1 /* RickMortyUI in Frameworks */ = {isa = PBXBuildFile; productRef = AF3E26642E63B5CB00B918F1 /* RickMortyUI */; };
+		AF7BB0E72E6601EE00714D7B /* FeedListView in Frameworks */ = {isa = PBXBuildFile; productRef = AF7BB0E62E6601EE00714D7B /* FeedListView */; };
+		AF7BB0E92E6602E100714D7B /* TabBarView in Frameworks */ = {isa = PBXBuildFile; productRef = AF7BB0E82E6602E100714D7B /* TabBarView */; };
 		AFC577082E6095CE00B3C3F0 /* CoreAPI in Frameworks */ = {isa = PBXBuildFile; productRef = AFC577072E6095CE00B3C3F0 /* CoreAPI */; };
 		AFC5770A2E6095CE00B3C3F0 /* DependencyContainer in Frameworks */ = {isa = PBXBuildFile; productRef = AFC577092E6095CE00B3C3F0 /* DependencyContainer */; };
 		AFC5770C2E6095CE00B3C3F0 /* RickMortyNetworkLayer in Frameworks */ = {isa = PBXBuildFile; productRef = AFC5770B2E6095CE00B3C3F0 /* RickMortyNetworkLayer */; };
@@ -68,7 +70,9 @@
 				AFC577082E6095CE00B3C3F0 /* CoreAPI in Frameworks */,
 				AF3E26652E63B5CB00B918F1 /* RickMortyUI in Frameworks */,
 				AFC579842E611B6200B3C3F0 /* FeedView in Frameworks */,
+				AF7BB0E72E6601EE00714D7B /* FeedListView in Frameworks */,
 				AFC579882E612AE800B3C3F0 /* CharacterDetailsView in Frameworks */,
+				AF7BB0E92E6602E100714D7B /* TabBarView in Frameworks */,
 				AFC5770C2E6095CE00B3C3F0 /* RickMortyNetworkLayer in Frameworks */,
 				AF0906A82E63A12700156C00 /* SUIRouting in Frameworks */,
 				AFC5770A2E6095CE00B3C3F0 /* DependencyContainer in Frameworks */,
@@ -153,6 +157,8 @@
 				AFC579872E612AE800B3C3F0 /* CharacterDetailsView */,
 				AF0906A72E63A12700156C00 /* SUIRouting */,
 				AF3E26642E63B5CB00B918F1 /* RickMortyUI */,
+				AF7BB0E62E6601EE00714D7B /* FeedListView */,
+				AF7BB0E82E6602E100714D7B /* TabBarView */,
 			);
 			productName = RickMorty;
 			productReference = AFC576022E5F64BD00B3C3F0 /* RickMorty.app */;
@@ -625,6 +631,14 @@
 		AF3E26642E63B5CB00B918F1 /* RickMortyUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RickMortyUI;
+		};
+		AF7BB0E62E6601EE00714D7B /* FeedListView */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FeedListView;
+		};
+		AF7BB0E82E6602E100714D7B /* TabBarView */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TabBarView;
 		};
 		AFC577072E6095CE00B3C3F0 /* CoreAPI */ = {
 			isa = XCSwiftPackageProductDependency;

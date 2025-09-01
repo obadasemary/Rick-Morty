@@ -6,20 +6,19 @@
 //
 
 import SwiftUI
-import SUIRouting
+import TabBarView
 
 @main
 struct RickMortyApp: App {
     
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    let composition = AppComposition()
     
     var body: some Scene {
         WindowGroup {
             TabBarView()
-                .environment(composition)
                 .environment(delegate.tabBarBuilder)
                 .environment(delegate.feedBuilder)
+                .environment(delegate.feedListBuilder)
                 .environment(delegate.characterDetailsBuilder)
         }
     }

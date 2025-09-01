@@ -32,9 +32,11 @@ class FeedListViewController: UITableViewController, UITableViewDataSourcePrefet
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         navigationItem.title = "Rick and Morty UIKit"
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationItem.largeTitleDisplayMode = .always
+        
         viewModel.stateDidChange = { [weak self] in
             Task { @MainActor in
                 self?.renderState()
@@ -82,7 +84,7 @@ class FeedListViewController: UITableViewController, UITableViewDataSourcePrefet
         _ tableView: UITableView,
         prefetchRowsAt indexPaths: [IndexPath]
     ) {
-        if indexPaths.contains(where: { $0.row >= viewModel.state.charactersAdapter.count - 5 }) {
+        if indexPaths.contains(where: { $0.row >= viewModel.state.charactersAdapter.count - 3 }) {
             viewModel.loadMore()
         }
     }
