@@ -1,6 +1,6 @@
 //
 //  FeedViewModel.swift
-//  RickMorty
+//  FeedView
 //
 //  Created by Abdelrahman Mohamed on 28.08.2025.
 //
@@ -82,7 +82,7 @@ final class FeedViewModel {
         }
     }
 
-    func openCharacterDetail(for character: CharacterDetailsAdapter) {
+    func openCharacterDetail(for character: CharacterAdapter) {
         router.showCharacterDetails(characterDetailsAdapter: character)
     }
 }
@@ -101,7 +101,11 @@ private extension FeedViewModel {
         }
 
         do {
-            let response = try await feedUseCase.execute(page: page, status: status?.rawValue)
+            let response = try await feedUseCase
+                .execute(
+                    page: page,
+                    status: status?.rawValue
+                )
 
             if page == 1 {
                 characters = response.results.map { $0.toAdapter() }
