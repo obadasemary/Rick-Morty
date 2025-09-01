@@ -12,14 +12,15 @@ import SUIRouting
 struct RickMortyApp: App {
     
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    let composition = AppComposition()
     
     var body: some Scene {
         WindowGroup {
-            RouterView { router in
-                delegate.feedBuilder.buildFeedView(router: router)
-            }
-            .environment(delegate.feedBuilder)
-            .environment(delegate.characterDetailsBuilder)
+            TabBarView()
+                .environment(composition)
+                .environment(delegate.tabBarBuilder)
+                .environment(delegate.feedBuilder)
+                .environment(delegate.characterDetailsBuilder)
         }
     }
 }
