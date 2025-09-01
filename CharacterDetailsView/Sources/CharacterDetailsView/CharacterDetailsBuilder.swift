@@ -21,7 +21,7 @@ public final class CharacterDetailsBuilder {
     }
     
     public func buildCharacterDetailsView(
-        characterDetailsAdapter: CharacterDetailsAdapter,
+        characterDetailsAdapter: CharacterAdapter,
         backAction: @escaping () -> Void
     ) -> some View {
         let feedUseCase: FeedUseCaseProtocol = FeedUseCase(container: container)

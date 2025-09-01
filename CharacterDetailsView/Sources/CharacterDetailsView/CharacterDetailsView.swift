@@ -125,7 +125,7 @@ public struct CharacterDetailsView: View {
     
     characterDetailsBuilder
         .buildCharacterDetailsView(
-            characterDetailsAdapter: CharacterDetailsAdapter.mock,
+            characterDetailsAdapter: CharacterAdapter.mock,
             backAction: {}
         )
         .previewEnvironment()

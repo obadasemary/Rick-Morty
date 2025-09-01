@@ -14,13 +14,12 @@ final class CharacterDetailsViewModel {
     
     private let feedUseCase: FeedUseCaseProtocol
     
-    // Internal for testing, private(set) for external access
-    internal private(set) var character: CharacterDetailsAdapter
+    internal private(set) var character: CharacterAdapter
     private let backAction: () -> Void
     
     init(
         feedUseCase: FeedUseCaseProtocol,
-        character: CharacterDetailsAdapter,
+        character: CharacterAdapter,
         backAction: @escaping () -> Void
     ) {
         self.feedUseCase = feedUseCase
