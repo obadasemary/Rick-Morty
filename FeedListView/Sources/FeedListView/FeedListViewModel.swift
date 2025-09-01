@@ -83,10 +83,6 @@ final class FeedListViewModel {
         }
     }
     
-    func retry() {
-        refreshData()
-    }
-    
     func openCharacterDetail(for character: CharacterAdapter) {
         router.showCharacterDetails(characterDetailsAdapter: character)
     }
