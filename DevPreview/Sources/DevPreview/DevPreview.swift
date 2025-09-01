@@ -1,6 +1,6 @@
 //
 //  DevPreview.swift
-//  RickMorty
+//  DevPreview
 //
 //  Created by Abdelrahman Mohamed on 28.08.2025.
 //
