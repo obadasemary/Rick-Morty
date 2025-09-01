@@ -36,6 +36,7 @@ class FeedListViewController: UITableViewController, UITableViewDataSourcePrefet
         
         navigationItem.title = "Rick and Morty UIKit"
         navigationController?.navigationBar.prefersLargeTitles = true
+        navigationController?.navigationBar.barTintColor = .systemBackground
         navigationItem.largeTitleDisplayMode = .always
         
         startObservingViewModel()
@@ -82,7 +83,7 @@ class FeedListViewController: UITableViewController, UITableViewDataSourcePrefet
         prefetchRowsAt indexPaths: [IndexPath]
     ) {
         if indexPaths
-            .contains(where: { $0.row >= viewModel.characters.count - 1 }) {
+            .contains(where: { $0.row >= viewModel.characters.count - 3 }) {
             viewModel.loadMoreData()
         }
     }
