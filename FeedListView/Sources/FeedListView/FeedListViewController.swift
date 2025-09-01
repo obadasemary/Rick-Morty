@@ -49,6 +49,8 @@ class FeedListViewController: UITableViewController, UITableViewDataSourcePrefet
             )
         tableView.separatorStyle = .none
         
+        setupPullToRefresh()
+        
         dataSource = UITableViewDiffableDataSource(
             tableView: tableView,
             cellProvider: { tableView, indexPath, characterAdapter in
@@ -100,6 +102,19 @@ class FeedListViewController: UITableViewController, UITableViewDataSourcePrefet
 
 private extension FeedListViewController {
     
+    func setupPullToRefresh() {
+        refreshControl = UIRefreshControl()
+        refreshControl?.addTarget(
+            self,
+            action: #selector(handlePullToRefresh),
+            for: .valueChanged
+        )
+    }
+    
+    @objc func handlePullToRefresh() {
+        viewModel.refreshData()
+    }
+    
     func startObservingViewModel() {
         withObservationTracking {
             // Read the properties you want to observe.
@@ -121,11 +136,13 @@ private extension FeedListViewController {
             renderLoadingState()
         case .loaded(let characters):
             tableView.backgroundView = nil
+            refreshControl?.endRefreshing()
             applyCharactersSnapshot(characters, scrollToTop: viewModel.currentPage == 1)
         case .loadingMore(let characters):
             tableView.backgroundView = nil
             applyCharactersSnapshot(characters, scrollToTop: false)
         case .error:
+            refreshControl?.endRefreshing()
             renderErrorState(message: viewModel.errorMessage ?? "An error occurred")
         }
     }
@@ -154,7 +171,7 @@ private extension FeedListViewController {
     
     func renderErrorState(message: String) {
         let errorView = ErrorView(message: message) { [weak self] in
-            self?.viewModel.retry()
+            self?.viewModel.refreshData()
         }
         tableView.backgroundView = UIHostingController(rootView: errorView).view
     }
