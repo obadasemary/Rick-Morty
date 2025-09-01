@@ -23,7 +23,7 @@ struct TabBarView: View {
                 feedBuilder.buildFeedView(router: router)
             }
             .tabItem {
-                Label("Explore", systemImage: "house")
+                Label("SwiftUI", systemImage: "apple.terminal.fill")
             }
             
             RouterView { router in
@@ -42,7 +42,9 @@ struct TabBarView: View {
                     }
                 )
             }
-            .tabItem { Label("UIKit", systemImage: "list.bullet") }
+            .tabItem {
+                Label("UIKit", systemImage: "apple.terminal.on.rectangle.fill")
+            }
         }
     }
 }
