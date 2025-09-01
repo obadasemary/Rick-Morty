@@ -19,7 +19,7 @@ struct FeedView: View {
             LazyVStack {
                 FiltersView { filter in
                     viewModel
-                        .filterByStatus(filter.map{ $0.toCharacterStatus })
+                        .applyFilter(filter.map{ $0.toCharacterStatus })
                 }
                 
                 switch viewModel.state {

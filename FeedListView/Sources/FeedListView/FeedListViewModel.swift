@@ -5,34 +5,38 @@
 //  Created by Abdelrahman Mohamed on 01.09.2025.
 //
 
+import Foundation
 import UseCase
-import SUIRouting
+import RickMortyNetworkLayer
 
+@Observable
 @MainActor
 final class FeedListViewModel {
     
-    enum State: Equatable {
+    // MARK: - State
+    enum State {
+        case idle
         case loading
-        case loaded([CharacterAdapter], isFirstPage: Bool)
-        case error(message: String)
+        case loaded([CharacterAdapter])
+        case error(Error)
+        case loadingMore([CharacterAdapter])
     }
     
+    // MARK: - Dependencies
     private let feedUseCase: FeedUseCaseProtocol
     private let router: FeedListRouterProtocol
     
+    // MARK: - Published Properties
+    private(set) var characters: [CharacterAdapter] = []
+    private(set) var currentPage: Int = 1
+    private(set) var hasMorePages: Bool = true
     private(set) var selectedStatus: Status? = nil
+    private(set) var state: State = .idle
     
-    private(set) var state: State = .loading {
-        didSet {
-            stateDidChange?()
-        }
-    }
+    // Loading guard
+    private var isLoading: Bool = false
     
-    private var filter: FilterAdapter?
-    var stateDidChange: (() -> Void)?
-    
-    private var page = 1
-    
+    // MARK: - Initialization
     init(
         feedUseCase: FeedUseCaseProtocol,
         router: FeedListRouterProtocol
@@ -41,24 +45,47 @@ final class FeedListViewModel {
         self.router = router
     }
     
-    func didLoad() {
-        Task { await loadCharacters() }
+    // MARK: - Public Methods
+    func loadInitialData() {
+        guard case .idle = state else { return }
+        Task { [weak self] in
+            await self?.fetchCharacters(page: 1, status: self?.selectedStatus)
+        }
     }
     
-    func loadMore() {
-        page += 1
-        Task { await loadCharacters() }
+    func refreshData() {
+        currentPage = 1
+        hasMorePages = true
+        characters = []
+        state = .loading
+        Task { [weak self] in
+            await self?.fetchCharacters(page: 1, status: self?.selectedStatus)
+        }
+    }
+    
+    func loadMoreData() {
+        print("loadMore? page=\(currentPage) hasMore=\(hasMorePages) isLoading=\(isLoading)")
+        guard hasMorePages && !isLoading else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            await self.fetchCharacters(page: self.currentPage + 1, status: self.selectedStatus)
+        }
     }
     
     func applyFilter(filter: FilterAdapter?) {
         selectedStatus = filter?.toCharacterStatus
-        page = 1
-        Task { await loadCharacters() }
+        currentPage = 1
+        hasMorePages = true
+        characters = []
+        state = .loading
+        Task { [weak self] in
+            guard let self else { return }
+            await self.fetchCharacters(page: 1, status: self.selectedStatus)
+        }
     }
     
     func retry() {
-        state = .loading
-        Task { await loadCharacters() }
+        refreshData()
     }
     
     func openCharacterDetail(for character: CharacterAdapter) {
@@ -66,41 +93,71 @@ final class FeedListViewModel {
     }
 }
 
+// MARK: - Private Methods
 private extension FeedListViewModel {
     
-    func loadCharacters() async {
+    func fetchCharacters(page: Int, status: Status?) async {
+        guard !isLoading else { return }
+        isLoading = true
+
+        if page == 1 {
+            state = .loading
+        } else {
+            state = .loadingMore(characters)
+        }
+
         do {
             let response = try await feedUseCase
                 .execute(
                     page: page,
-                    status: selectedStatus?.rawValue
+                    status: status?.rawValue
                 )
-            
+
             if page == 1 {
-                state =
-                    .loaded(
-                        response.results.map { $0.toAdapter() },
-                        isFirstPage: true
-                    )
+                characters = response.results.map { $0.toAdapter() }
             } else {
-                guard case let .loaded(oldCharacters, _) = state else { return }
-                var newCharacters = oldCharacters
-                newCharacters.append(contentsOf: response.results.map { $0.toAdapter() })
-                state = .loaded(newCharacters, isFirstPage: false)
+                characters.append(contentsOf: response.results.map { $0.toAdapter() })
             }
+
+            currentPage = page
+            hasMorePages = response.info.next != nil
+            state = .loaded(characters)
         } catch {
-            state = .error(message: "Something Went Wrong")
+            if page == 1 {
+                state = .error(error)
+            } else {
+                // Keep existing data on pagination error
+                state = .loaded(characters)
+            }
         }
+
+        isLoading = false
     }
 }
 
-extension FeedListViewModel.State {
-    var charactersAdapter: [CharacterAdapter] {
-        switch self {
-        case let .loaded(characters, _):
-            characters
-        case .error, .loading:
-            []
+// MARK: - Error Handling
+extension FeedListViewModel {
+    var errorMessage: String? {
+        guard case .error(let error) = state else { return nil }
+
+        if let networkError = error as? NetworkError {
+            switch networkError {
+            case .networkError:
+                return "Network connection error. Please check your internet connection."
+            case .serverError(let statusCode):
+                return "Server error (Status: \(statusCode)). Please try again later."
+            case .decodingError:
+                return "Data format error. Please try again."
+            case .invalidURL, .invalidResponse:
+                return "Invalid response from server. Please try again."
+            }
         }
+
+        return error.localizedDescription
+    }
+
+    var isLoadingMore: Bool {
+        guard case .loadingMore = state else { return false }
+        return true
     }
 }

@@ -18,7 +18,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     // Builders
     var tabBarBuilder: TabBarBuilder!
     var feedBuilder: FeedBuilder!
-    var feedListBuilder: FeedListBuilder!
+    var feedListBuilder: FeedListBuilder! // Hybrid UIKit/SwiftUI Architecture
     var characterDetailsBuilder: CharacterDetailsBuilder!
     
     func application(
