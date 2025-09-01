@@ -2,6 +2,12 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:FeedListView">
+   </FileRef>
+   <FileRef
+      location = "group:TabBarView">
+   </FileRef>
+   <FileRef
       location = "group:RickMortyUI">
    </FileRef>
    <FileRef

@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Foundation
 import UseCase
 import DependencyContainer
 import RickMortyRepository
@@ -38,11 +37,5 @@ final class AppComposition {
         
         feedUseCase = container.resolve(FeedUseCaseProtocol.self)!
         self.container = container
-    }
-    
-    
-    // MARK: - Factories
-    public func makeFeedListViewModel() -> FeedListViewModel {
-        FeedListViewModel(feedUseCase: feedUseCase)
     }
 }

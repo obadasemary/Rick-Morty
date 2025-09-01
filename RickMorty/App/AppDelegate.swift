@@ -1,17 +1,14 @@
 //
 //  AppDelegate.swift
-//  ThmanyahChallenges
+//  RickMorty
 //
 //  Created by Abdelrahman Mohamed on 18.08.2025.
 //
 
-import Foundation
 import UIKit
-import RickMortyNetworkLayer
-import CoreAPI
-import RickMortyRepository
-import UseCase
+import TabBarView
 import FeedView
+import FeedListView
 import CharacterDetailsView
 
 class AppDelegate: NSObject, UIApplicationDelegate {
@@ -21,6 +18,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     // Builders
     var tabBarBuilder: TabBarBuilder!
     var feedBuilder: FeedBuilder!
+    var feedListBuilder: FeedListBuilder!
     var characterDetailsBuilder: CharacterDetailsBuilder!
     
     func application(
@@ -34,6 +32,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Register builders
         tabBarBuilder = TabBarBuilder(container: composition.container)
         feedBuilder = FeedBuilder(container: composition.container)
+        feedListBuilder = FeedListBuilder(container: composition.container)
         characterDetailsBuilder = CharacterDetailsBuilder(container: composition.container)
         
         return true
