@@ -1,20 +1,19 @@
 //
-//  Filter.swift
-//  FeedView
+//  FilterAdapter.swift
+//  UseCase
 //
 //  Created by Abdelrahman Mohamed on 29.08.2025.
 //
 
 import Foundation
-import UseCase
 
-enum Filter: CaseIterable, Equatable {
+public enum FilterAdapter: CaseIterable, Equatable {
     case alive
     case dead
     case unknown
 }
 
-extension Filter {
+public extension FilterAdapter {
     var toCharacterStatus: Status {
         switch self {
         case .alive: return .alive

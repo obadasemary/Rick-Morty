@@ -1,12 +1,11 @@
 //
 //  CharacterAdapter.swift
-//  FeedView
+//  UseCase
 //
 //  Created by Abdelrahman Mohamed on 29.08.2025.
 //
 
 import Foundation
-import UseCase
 
 // MARK: - Adapter (DTO -> UI/Domain)
 public struct CharacterAdapter: Identifiable, Hashable, Sendable {
@@ -17,6 +16,34 @@ public struct CharacterAdapter: Identifiable, Hashable, Sendable {
     public let species: String
     public let gender: UseCase.Gender
     public let image: URL?
+    
+    public init(
+        id: Int,
+        name: String,
+        status: UseCase.Status,
+        species: String,
+        gender: UseCase.Gender,
+        image: URL?
+    ) {
+        self.id = id
+        self.name = name
+        self.status = status
+        self.species = species
+        self.gender = gender
+        self.image = image
+    }
+}
+
+public extension CharacterAdapter {
+    
+    static let mock = CharacterAdapter(
+        id: 1,
+        name: "Obada",
+        status: .alive,
+        species: "Human",
+        gender: .male,
+        image: URL(string: "https://rickandmortyapi.com/api/character/avatar/1.jpeg")!
+    )
 }
 
 public extension CharacterResponse {
