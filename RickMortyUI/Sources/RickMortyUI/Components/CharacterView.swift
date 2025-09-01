@@ -8,12 +8,6 @@
 import SwiftUI
 import UseCase
 
-private enum Constants {
-    static let imageDimension: CGFloat = 80
-    static let cardCornerRadius: CGFloat = 12
-    static let imageCornerRadius: CGFloat = 8
-}
-
 public struct CharacterView: View {
     
     let character: CharacterAdapter
@@ -96,6 +90,12 @@ public struct CharacterView: View {
         case .unknown:
             Color.CaracterCard.Border.unknown
         }
+    }
+    
+    private enum Constants {
+        static let imageDimension: CGFloat = 80
+        static let cardCornerRadius: CGFloat = 12
+        static let imageCornerRadius: CGFloat = 8
     }
 }
 

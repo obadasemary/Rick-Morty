@@ -8,11 +8,11 @@
 import Foundation
 import UseCase
 import RickMortyNetworkLayer
-import CharacterDetailsView
 
 @Observable
 @MainActor
 final class FeedViewModel {
+    
     // MARK: - State
     enum State {
         case idle
@@ -21,6 +21,10 @@ final class FeedViewModel {
         case error(Error)
         case loadingMore([CharacterAdapter])
     }
+    
+    // MARK: - Dependencies
+    private let feedUseCase: FeedUseCaseProtocol
+    private let router: FeedRouterProtocol
 
     // MARK: - Published Properties
     private(set) var characters: [CharacterAdapter] = []
@@ -31,10 +35,6 @@ final class FeedViewModel {
 
     // Loading guard
     private var isLoading: Bool = false
-
-    // MARK: - Dependencies
-    private let feedUseCase: FeedUseCaseProtocol
-    private let router: FeedRouterProtocol
 
     // MARK: - Initialization
     init(
@@ -64,6 +64,7 @@ final class FeedViewModel {
     }
 
     func loadMoreData() {
+        print("loadMore? page=\(currentPage) hasMore=\(hasMorePages) isLoading=\(isLoading)")
         guard hasMorePages && !isLoading else { return }
         Task { [weak self] in
             guard let self else { return }
@@ -71,14 +72,15 @@ final class FeedViewModel {
         }
     }
 
-    func filterByStatus(_ status: Status?) {
+    func applyFilter(_ status: Status?) {
         selectedStatus = status
         currentPage = 1
         hasMorePages = true
         characters = []
         state = .loading
         Task { [weak self] in
-            await self?.fetchCharacters(page: 1, status: status)
+            guard let self else { return }
+            await self.fetchCharacters(page: 1, status: status)
         }
     }
 

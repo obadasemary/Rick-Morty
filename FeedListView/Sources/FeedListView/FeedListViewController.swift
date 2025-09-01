@@ -8,6 +8,7 @@
 import UIKit
 import SwiftUI
 import UseCase
+import Observation
 import RickMortyUI
 
 class FeedListViewController: UITableViewController, UITableViewDataSourcePrefetching {
@@ -37,11 +38,7 @@ class FeedListViewController: UITableViewController, UITableViewDataSourcePrefet
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationItem.largeTitleDisplayMode = .always
         
-        viewModel.stateDidChange = { [weak self] in
-            Task { @MainActor in
-                self?.renderState()
-            }
-        }
+        startObservingViewModel()
         
         tableView.prefetchDataSource = self
         tableView
@@ -66,7 +63,7 @@ class FeedListViewController: UITableViewController, UITableViewDataSourcePrefet
         )
         
         renderState()
-        viewModel.didLoad()
+        viewModel.loadInitialData()
     }
     
     override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
@@ -84,8 +81,9 @@ class FeedListViewController: UITableViewController, UITableViewDataSourcePrefet
         _ tableView: UITableView,
         prefetchRowsAt indexPaths: [IndexPath]
     ) {
-        if indexPaths.contains(where: { $0.row >= viewModel.state.charactersAdapter.count - 3 }) {
-            viewModel.loadMore()
+        if indexPaths
+            .contains(where: { $0.row >= viewModel.characters.count - 1 }) {
+            viewModel.loadMoreData()
         }
     }
     
@@ -101,15 +99,33 @@ class FeedListViewController: UITableViewController, UITableViewDataSourcePrefet
 
 private extension FeedListViewController {
     
+    func startObservingViewModel() {
+        withObservationTracking {
+            // Read the properties you want to observe.
+            _ = viewModel.state
+            _ = viewModel.characters
+            _ = viewModel.isLoadingMore
+        } onChange: { [weak self] in
+            // Re-render and re-establish tracking.
+            Task { @MainActor in
+                self?.renderState()
+                self?.startObservingViewModel()
+            }
+        }
+    }
+    
     func renderState() {
         switch viewModel.state {
-        case let .loaded(characters, isFirstPage):
-            tableView.backgroundView = nil
-            applyCharactersSnapshot(characters, scrollToTop: isFirstPage)
-        case .loading:
+        case .idle, .loading:
             renderLoadingState()
-        case let .error(message):
-            renderErrorState(message: message)
+        case .loaded(let characters):
+            tableView.backgroundView = nil
+            applyCharactersSnapshot(characters, scrollToTop: viewModel.currentPage == 1)
+        case .loadingMore(let characters):
+            tableView.backgroundView = nil
+            applyCharactersSnapshot(characters, scrollToTop: false)
+        case .error:
+            renderErrorState(message: viewModel.errorMessage ?? "An error occurred")
         }
     }
     
