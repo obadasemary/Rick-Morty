@@ -1,6 +1,6 @@
 //
 //  FeedBuilder.swift
-//  RickMorty
+//  FeedView
 //
 //  Created by Abdelrahman Mohamed on 28.08.2025.
 //

@@ -1,13 +1,13 @@
 //
 //  FeedView.swift
-//  RickMorty
+//  FeedView
 //
 //  Created by Abdelrahman Mohamed on 28.08.2025.
 //
 
 import SwiftUI
+import RickMortyUI
 import DevPreview
-import CharacterDetailsView
 import UseCase
 
 struct FeedView: View {
@@ -41,7 +41,7 @@ struct FeedView: View {
                     ForEach(viewModel.characters, id: \.id) { character in
                         CharacterView(character: character)
                             .onTapGesture {
-                                let detailsAdapter = CharacterDetailsAdapter(
+                                let detailsAdapter = CharacterAdapter(
                                     id: character.id,
                                     name: character.name,
                                     status: character.status,
@@ -54,7 +54,6 @@ struct FeedView: View {
                                     .openCharacterDetail(for: detailsAdapter)
                             }
                             .onAppear {
-                                // Infinite scroll trigger when the last item appears
                                 if character.id == viewModel.characters.last?.id {
                                     viewModel.loadMoreData()
                                 }

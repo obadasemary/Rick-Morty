@@ -6,13 +6,14 @@
 //
 
 import SUIRouting
+import UseCase
 import CharacterDetailsView
 
 typealias RouterView = SUIRouting.RouterView
 
 @MainActor
 protocol FeedRouterProtocol {
-    func showCharacterDetails(characterDetailsAdapter: CharacterDetailsAdapter)
+    func showCharacterDetails(characterDetailsAdapter: CharacterAdapter)
 }
 
 @MainActor
@@ -24,7 +25,7 @@ struct FeedRouter {
 extension FeedRouter: FeedRouterProtocol {
     
     func showCharacterDetails(
-        characterDetailsAdapter: CharacterDetailsAdapter
+        characterDetailsAdapter: CharacterAdapter
     ) {
         router.showScreen(.push) { innerRouter in
             characterDetailsBuilder
