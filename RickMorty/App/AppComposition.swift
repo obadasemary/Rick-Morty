@@ -5,12 +5,14 @@
 //  Created by Abdelrahman Mohamed on 28.08.2025.
 //
 
+import SwiftUI
 import Foundation
 import UseCase
 import DependencyContainer
 import RickMortyRepository
 import RickMortyNetworkLayer
 
+@Observable
 @MainActor
 final class AppComposition {
     
@@ -18,7 +20,7 @@ final class AppComposition {
     let feedUseCase: FeedUseCaseProtocol
     
     init() {
-        let container = container
+        let container = DIContainer()
         
         container.register(NetworkService.self) {
             URLSessionNetworkService(session: .shared)
@@ -36,5 +38,11 @@ final class AppComposition {
         
         feedUseCase = container.resolve(FeedUseCaseProtocol.self)!
         self.container = container
+    }
+    
+    
+    // MARK: - Factories
+    public func makeFeedListViewModel() -> FeedListViewModel {
+        FeedListViewModel(feedUseCase: feedUseCase)
     }
 }
