@@ -1,0 +1,15 @@
+{
+  "originHash" : "65c2429bbb2823549572f7d8d8ab3ca476bea3da9b8536461e7a4e65254461fa",
+  "pins" : [
+    {
+      "identity" : "suirouting",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/obadasemary/SUIRouting.git",
+      "state" : {
+        "revision" : "d9ca0e7fad40aa875ec72104a4af80f3655dfe9d",
+        "version" : "1.0.6"
+      }
+    }
+  ],
+  "version" : 3
+}

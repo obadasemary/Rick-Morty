@@ -11,4 +11,9 @@ import Foundation
 public struct CharactersPageResponse: Decodable, Sendable {
     public let info: PageInfoResponse
     public let results: [CharacterResponse]
+    
+    public init(info: PageInfoResponse, results: [CharacterResponse]) {
+        self.info = info
+        self.results = results
+    }
 }
