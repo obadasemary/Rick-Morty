@@ -21,7 +21,6 @@ let package = Package(
         .package(path: "../RickMortyUI"),
         .package(path: "../DependencyContainer"),
         .package(path: "../CharacterDetailsView"),
-        .package(path: "../RickMortyNetworkLayer"),
         .package(url: "https://github.com/obadasemary/SUIRouting.git", .upToNextMajor(from: "1.0.6"))
     ],
     targets: [
@@ -35,8 +34,7 @@ let package = Package(
                 .product(name: "SUIRouting", package: "SUIRouting"),
                 .product(name: "RickMortyUI", package: "RickMortyUI"),
                 .product(name: "DependencyContainer", package: "DependencyContainer"),
-                .product(name: "CharacterDetailsView", package: "CharacterDetailsView"),
-                .product(name: "RickMortyNetworkLayer", package: "RickMortyNetworkLayer")
+                .product(name: "CharacterDetailsView", package: "CharacterDetailsView")
             ]
         ),
         .testTarget(

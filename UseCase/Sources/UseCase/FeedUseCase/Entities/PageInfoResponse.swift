@@ -17,4 +17,11 @@ public struct PageInfoResponse: Decodable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case count, pages, next, prev
     }
+    
+    public init(count: Int, pages: Int, next: URL?, prev: URL?) {
+        self.count = count
+        self.pages = pages
+        self.next = next
+        self.prev = prev
+    }
 }
