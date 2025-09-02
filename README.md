@@ -92,7 +92,7 @@ The project is organized into multiple Swift packages, each with a specific resp
 
 ### 1. Clone the Repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/obadasemary/Rick-Morty
 cd RickMorty
 ```
 
