@@ -15,6 +15,7 @@ public struct CharacterAdapter: Identifiable, Hashable, Sendable {
     public let status: UseCase.Status
     public let species: String
     public let gender: UseCase.Gender
+    public let location: String?
     public let image: URL?
     
     public init(
@@ -23,6 +24,7 @@ public struct CharacterAdapter: Identifiable, Hashable, Sendable {
         status: UseCase.Status,
         species: String,
         gender: UseCase.Gender,
+        location: String?,
         image: URL?
     ) {
         self.id = id
@@ -30,6 +32,7 @@ public struct CharacterAdapter: Identifiable, Hashable, Sendable {
         self.status = status
         self.species = species
         self.gender = gender
+        self.location = location
         self.image = image
     }
 }
@@ -42,6 +45,7 @@ public extension CharacterAdapter {
         status: .alive,
         species: "Human",
         gender: .male,
+        location: "Earth",
         image: URL(string: "https://rickandmortyapi.com/api/character/avatar/1.jpeg")!
     )
 }
@@ -54,6 +58,7 @@ public extension CharacterResponse {
             status: status,
             species: species,
             gender: gender,
+            location: origin.name.lowercased() == "unknown" ? location.name : origin.name,
             image: image
         )
     }

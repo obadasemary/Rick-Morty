@@ -107,6 +107,7 @@ public struct CharacterView: View {
             status: .alive,
             species: "Human",
             gender: .male,
+            location: "Earth",
             image: URL(string: "https://rickandmortyapi.com/api/character/avatar/1.jpeg")!,
         )
     )

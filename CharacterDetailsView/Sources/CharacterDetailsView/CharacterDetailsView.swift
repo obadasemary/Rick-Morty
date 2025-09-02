@@ -58,34 +58,53 @@ public struct CharacterDetailsView: View {
                 }
                 .frame(maxWidth: .infinity)
                 
-                // Name
-                HStack {
-                    Text(viewModel.character.name)
-                        .font(.title)
-                        .fontWeight(.bold)
+                VStack(spacing: .zero) {
+                    HStack {
+                        Text(viewModel.character.name)
+                            .font(.title)
+                            .fontWeight(.bold)
+                        
+                        Spacer()
+                        
+                        Text(statusText(viewModel.character.status))
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(statusColor(viewModel.character.status))
+                            .clipShape(Capsule())
+                    }
+                    .padding(.horizontal, 16)
                     
-                    Spacer()
-                    
-                    Text(statusText(viewModel.character.status))
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(statusColor(viewModel.character.status))
-                        .clipShape(Capsule())
+                    HStack(spacing: .zero) {
+                        Text(viewModel.character.species)
+                            .fontWeight(.bold)
+                            .foregroundColor(.secondary)
+                        Text(" · ")
+                            .fontWeight(.bold)
+                            .foregroundColor(.black)
+                        Text(viewModel.character.gender.rawValue.capitalized)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
                 }
-                .padding(.horizontal, 16)
                 
-                HStack {
-                    Text(
-                        "\(viewModel.character.species) · \(viewModel.character.gender.rawValue.capitalized)"
-                    )
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    
-                    Spacer()
+                if let location = viewModel.character.location {
+                    HStack {
+                        Text("Location :")
+                            .fontWeight(.bold)
+                            .foregroundColor(.black)
+                        Text(location.capitalized)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
                 }
-                .padding(.horizontal, 16)
                 
                 Spacer()
             }

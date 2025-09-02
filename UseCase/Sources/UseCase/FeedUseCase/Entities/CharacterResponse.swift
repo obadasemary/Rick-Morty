@@ -15,6 +15,8 @@ public struct CharacterResponse: Decodable, Identifiable, Hashable, Sendable {
     public let species: String
     public let type: String
     public let gender: Gender
+    public let origin: APIReferenceResponse
+    public let location: APIReferenceResponse
     public let image: URL?
     
     public init(
@@ -24,6 +26,8 @@ public struct CharacterResponse: Decodable, Identifiable, Hashable, Sendable {
         species: String,
         type: String,
         gender: Gender,
+        origin: APIReferenceResponse,
+        location: APIReferenceResponse,
         image: URL?
     ) {
         self.id = id
@@ -32,6 +36,8 @@ public struct CharacterResponse: Decodable, Identifiable, Hashable, Sendable {
         self.species = species
         self.type = type
         self.gender = gender
+        self.origin = origin
+        self.location = location
         self.image = image
     }
 }
