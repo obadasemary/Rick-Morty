@@ -29,7 +29,10 @@ let package = Package(
         ),
         .testTarget(
             name: "UseCaseTests",
-            dependencies: ["UseCase"]
+            dependencies: [
+                "UseCase",
+                .product(name: "DependencyContainer", package: "DependencyContainer")
+            ]
         ),
     ]
 )
