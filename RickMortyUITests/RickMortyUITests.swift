@@ -9,26 +9,106 @@ import XCTest
 
 final class RickMortyUITests: XCTestCase {
 
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+    private var app: XCUIApplication!
 
-        // In UI tests it is usually best to stop immediately when a failure occurs.
+    override func setUpWithError() throws {
         continueAfterFailure = false
 
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
+        app = XCUIApplication()
+        // Pass a flag so the app can configure mock data or faster startup if it supports it.
+        app.launchArguments += ["-ui-testing"]
+        app.launch()
     }
 
     override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        app = nil
     }
 
-    @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
-        let app = XCUIApplication()
-        app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+    func testSwiftUITabLoadsCharactersScreen() throws {
+        // Assert that the main Characters screen is visible.
+        let charactersTitle = app.navigationBars.staticTexts["Characters"]
+        XCTAssertTrue(charactersTitle.waitForExistence(timeout: 5), "Characters screen should appear after launch")
+    }
+
+    
+    func testNavigateBackFromScrollView() throws {
+        app = XCUIApplication()
+        app.launch()
+        
+        app.activate()
+        app.scrollViews.firstMatch.tap()
+        app.buttons["arrow.left"].tap()
+    }
+
+    func testSwitchToUIKitTabIfPresent() throws {
+        // If your app exposes a UIKit tab (labelled "UIKit"), verify that it can be selected.
+        let uiKitTab = app.tabBars.buttons["UIKit"].firstMatch
+        if uiKitTab.waitForExistence(timeout: 2) {
+            uiKitTab.tap()
+            XCTAssertTrue(uiKitTab.isSelected, "UIKit tab should be selected")
+        } else {
+            throw XCTSkip("UIKit tab not present; skipping tab switch test.")
+        }
+    }
+    
+    func testSwitchToUIKitTabAndOpenCharacterDetailsAndThenBack() throws {
+        app = XCUIApplication()
+        app.activate()
+        app.buttons["UIKit"].tap()
+        app.otherElements.containing(.staticText, identifier: "Beth Smith").firstMatch.swipeUp()
+        app.staticTexts["Jerry Smith"].tap()
+        app.buttons["arrow.left"].tap()
+    }
+    
+    func testFeedViewWithFilter() throws {
+        app = XCUIApplication()
+        app.activate()
+        app.staticTexts["Alive"].tap()
+        app.staticTexts["Dead"].tap()
+
+        let unknownStaticText = app.staticTexts["Unknown"]
+        unknownStaticText.tap()
+        unknownStaticText.tap()
+    }
+    
+    func testFeedViewSwiftUIWithScroll() throws {
+        app = XCUIApplication()
+        let app = XCUIApplication()
+        app.activate()
+        let scrollViewsQuery = app.scrollViews
+        let element = scrollViewsQuery.firstMatch
+        element.swipeRight()
+        element.swipeRight()
+
+        let element2 = scrollViewsQuery.firstMatch
+        element2.swipeRight()
+        element2.swipeUp()
+
+        let element3 = scrollViewsQuery.firstMatch
+        element3.tap()
+
+        let arrowLeftButton = app.buttons["arrow.left"]
+        arrowLeftButton.tap()
+        element3.tap()
+        arrowLeftButton.tap()
+        element3.swipeRight()
+        element3.swipeUp()
+        scrollViewsQuery.firstMatch.tap()
+        arrowLeftButton.tap()
+        app.activate()
+    }
+    
+    func testFeedListViewUIKitWithFilter() throws {
+        app = XCUIApplication()
+        app.activate()
+        app.buttons["UIKit"].tap()
+        app.staticTexts["Alive"].tap()
+        app.staticTexts["Dead"].tap()
+
+        let unknownStaticText = app.staticTexts["Unknown"]
+        unknownStaticText.tap()
+        unknownStaticText.tap()
     }
 
     @MainActor
