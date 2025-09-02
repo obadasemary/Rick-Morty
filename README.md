@@ -1,5 +1,10 @@
 # RickMorty iOS App
 
+[![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)](https://swift.org)
+[![iOS](https://img.shields.io/badge/iOS-17.6+-blue.svg)](https://developer.apple.com/ios/)
+[![Xcode](https://img.shields.io/badge/Xcode-16.0+-blue.svg)](https://developer.apple.com/xcode/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 A modern iOS application built with SwiftUI and Clean Architecture, showcasing characters from the Rick and Morty universe. The app demonstrates best practices in iOS development including modular architecture, dependency injection, and comprehensive testing.
 
 ## 🏗️ Architecture
