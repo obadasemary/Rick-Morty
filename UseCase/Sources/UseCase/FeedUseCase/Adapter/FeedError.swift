@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum FeedError: Equatable {
+public enum FeedError: Error, Equatable {
     case network
     case server(status: Int?)
     case decoding
