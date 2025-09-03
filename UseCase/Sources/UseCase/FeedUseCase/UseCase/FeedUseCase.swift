@@ -13,7 +13,6 @@ public protocol FeedUseCaseProtocol {
     func execute(page: Int?, status: String?) async throws -> CharactersPageResponse
 }
 
-@Observable
 @MainActor
 public final class FeedUseCase {
     

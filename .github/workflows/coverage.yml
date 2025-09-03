@@ -11,6 +11,8 @@ on:
 
 env:
   DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+  IOS_SIMULATOR_DEVICE: "iPhone 16"
+  IOS_SIMULATOR_OS: "26.0"
 
 jobs:
   # Job 1: Generate Code Coverage
@@ -48,7 +50,7 @@ jobs:
           xcodebuild test \
             -workspace RickMorty.xcworkspace \
             -scheme RickMorty \
-            -destination "platform=iOS Simulator,name=iPhone 16,OS=18.5" \
+            -destination "platform=iOS Simulator,name=iPhone 16,OS=26.0" \
             -configuration Debug \
             -only-testing:RickMortyTests \
             -enableCodeCoverage YES \
@@ -216,7 +218,7 @@ jobs:
           xcodebuild test \
             -workspace RickMorty.xcworkspace \
             -scheme RickMorty \
-            -destination "platform=iOS Simulator,name=iPhone 16,OS=18.5" \
+            -destination "platform=iOS Simulator,name=iPhone 16,OS=26.0" \
             -configuration Release \
             -only-testing:RickMortyUITests/testLaunchPerformance \
             CODE_SIGNING_ALLOWED=NO \
