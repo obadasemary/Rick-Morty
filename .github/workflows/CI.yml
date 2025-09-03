@@ -48,16 +48,16 @@ jobs:
         run: |
           set -euo pipefail
           dirs_json=$(python3 - <<'PY'
-import os, json
-roots=set()
-for root, dirs, files in os.walk('.', topdown=True):
-    # prune noisy/hidden dirs
-    dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ('DerivedData', '.git')]
-    if 'Package.swift' in files:
-        roots.add(root)
-print(json.dumps(sorted(roots)))
-PY
-)
+          import os, json
+          roots=set()
+          for root, dirs, files in os.walk('.', topdown=True):
+          # prune noisy/hidden dirs
+          dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ('DerivedData', '.git')]
+          if 'Package.swift' in files:
+          roots.add(root)
+          print(json.dumps(sorted(roots)))
+          PY
+          )
           echo "dirs=$dirs_json" >> "$GITHUB_OUTPUT"
 
       - name: Run tests for each package
