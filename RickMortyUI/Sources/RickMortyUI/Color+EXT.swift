@@ -71,10 +71,30 @@ public extension Color {
         Color(NSColor(calibratedRed: 1.0, green: 0.90, blue: 0.90, alpha: 1))
     }
     
-    enum StatusColor {
-        public static let alive = Color.lightBlue
-        public static let dead = Color.lightRed
-        public static let unknown = Color(NSColor.windowBackgroundColor)
+    static let lightGray = Color.gray.opacity(0.3)
+    
+    enum CaracterCard {
+        public enum Status {
+            public static let alive = Color.lightBlue
+            public static let dead = Color.lightRed
+            public static let unknown = Color(NSColor.windowBackgroundColor)
+        }
+        
+        public enum Border {
+            public static let alive = Color.lightBlue
+            public static let dead = Color.lightRed
+            public static let unknown = Color.lightGray
+        }
+    }
+    
+    enum CaracterDetails {
+        public enum Status {
+            public enum Background {
+                public static let alive = Color.lightBlue
+                public static let dead = Color.lightRed
+                public static let unknown = Color.lightGray
+            }
+        }
     }
 }
 #endif
