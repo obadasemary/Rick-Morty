@@ -47,18 +47,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          dirs_json=$(python3 - <<'PY'
+          # Generate pkgs.json with a portable Python script (no GNU find / mapfile)
+          python3 - <<'PY' > pkgs.json
           import os, json
-          roots=set()
+          roots = set()
           for root, dirs, files in os.walk('.', topdown=True):
-          # prune noisy/hidden dirs
-          dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ('DerivedData', '.git')]
-          if 'Package.swift' in files:
-          roots.add(root)
+              # prune hidden/noisy dirs
+              dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ('DerivedData', '.git')]
+              if 'Package.swift' in files:
+                  roots.add(root)
           print(json.dumps(sorted(roots)))
           PY
-          )
-          echo "dirs=$dirs_json" >> "$GITHUB_OUTPUT"
+          echo "dirs=$(cat pkgs.json)" >> "$GITHUB_OUTPUT"
 
       - name: Run tests for each package
         if: ${{ steps.discover.outputs.dirs != '[]' }}
@@ -67,7 +67,6 @@ jobs:
           set -euo pipefail
           dirs='${{ steps.discover.outputs.dirs }}'
           echo "Testing packages: $dirs"
-          # jq is available on macOS runners; if you prefer, you can loop via python instead
           for dir in $(jq -r '.[]' <<<"$dirs"); do
             echo "::group::swift test in $dir"
             (cd "$dir" && swift test -v)
