@@ -39,6 +39,9 @@ This project follows **Clean Architecture** principles with a modular approach u
 └───────────────────────────────────────────────────────────┘
 ```
 
+![Rick & Morty Design Architecture](https://github.com/obadasemary/Rick-Morty/blob/main/Rick%20%26%20Morty%20Design%20Architecture.png)
+![Rick & Morty Design Architecture Interview](https://github.com/obadasemary/Rick-Morty/blob/main/Rick%20%26%20Morty%20Design%20Architecture%20Interview.png)
+
 ## 📦 Package Structure
 
 The project is organized into multiple Swift packages, each with a specific responsibility:
@@ -98,6 +101,8 @@ The project is organized into multiple Swift packages, each with a specific resp
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/obadasemary/Rick-Morty
+```
+```bash
 cd RickMorty
 ```
 
