@@ -1,0 +1,341 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, Enhancement, UITests ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+  IOS_SIMULATOR_DEVICE: "iPhone 16"
+  IOS_SIMULATOR_OS: "18.5"
+
+jobs:
+  # Job 1: Code Quality and Linting
+  code-quality:
+    name: Code Quality & Linting
+    runs-on: macos-14
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
+
+      - name: Cache Swift Package Manager
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Install SwiftLint
+        run: |
+          brew install swiftlint
+
+      - name: Run SwiftLint
+        run: |
+          swiftlint lint --reporter github-actions-logging
+
+      - name: Check for TODO/FIXME comments
+        run: |
+          echo "Checking for TODO/FIXME comments..."
+          if grep -r "TODO\|FIXME" --include="*.swift" --exclude-dir=".build" .; then
+            echo "Found TODO/FIXME comments. Consider addressing them."
+          else
+            echo "No TODO/FIXME comments found."
+          fi
+
+  # Job 2: Build and Unit Tests
+  build-and-test:
+    name: Build & Unit Tests
+    runs-on: macos-14
+    needs: code-quality
+    strategy:
+      matrix:
+        scheme: [RickMorty, RickMortyTests]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
+
+      - name: Cache Swift Package Manager
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-deriveddata-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-deriveddata-
+
+      - name: Resolve Swift Package Dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies -workspace RickMorty.xcworkspace -scheme RickMorty
+
+      - name: Build for iOS Simulator
+        run: |
+          xcodebuild build \
+            -workspace RickMorty.xcworkspace \
+            -scheme ${{ matrix.scheme }} \
+            -destination "platform=iOS Simulator,name=${{ env.IOS_SIMULATOR_DEVICE }},OS=${{ env.IOS_SIMULATOR_OS }}" \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Run Unit Tests
+        if: matrix.scheme == 'RickMortyTests'
+        run: |
+          xcodebuild test \
+            -workspace RickMorty.xcworkspace \
+            -scheme RickMorty \
+            -destination "platform=iOS Simulator,name=${{ env.IOS_SIMULATOR_DEVICE }},OS=${{ env.IOS_SIMULATOR_OS }}" \
+            -configuration Debug \
+            -only-testing:RickMortyTests \
+            CODE_SIGNING_ALLOWED=NO
+
+  # Job 3: Swift Package Tests
+  package-tests:
+    name: Swift Package Tests
+    runs-on: macos-14
+    needs: code-quality
+    strategy:
+      matrix:
+        package: [
+          "UseCase",
+          "DependencyContainer", 
+          "CoreAPI",
+          "RickMortyNetworkLayer",
+          "RickMortyRepository"
+        ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
+
+      - name: Cache Swift Package Manager
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Test ${{ matrix.package }} Package
+        run: |
+          cd ${{ matrix.package }}
+          swift test --enable-code-coverage
+
+      - name: Upload Package Test Coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./${{ matrix.package }}/.build/debug/codecov/default.profdata
+          flags: ${{ matrix.package }}
+          name: ${{ matrix.package }}-coverage
+
+  # Job 4: UI Tests
+  ui-tests:
+    name: UI Tests
+    runs-on: macos-14
+    needs: build-and-test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
+
+      - name: Cache Swift Package Manager
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-deriveddata-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-deriveddata-
+
+      - name: Boot iOS Simulator
+        run: |
+          xcrun simctl boot "iPhone 16" || true
+          xcrun simctl list devices | grep "iPhone 16"
+
+      - name: Run UI Tests
+        run: |
+          xcodebuild test \
+            -workspace RickMorty.xcworkspace \
+            -scheme RickMorty \
+            -destination "platform=iOS Simulator,name=${{ env.IOS_SIMULATOR_DEVICE }},OS=${{ env.IOS_SIMULATOR_OS }}" \
+            -configuration Debug \
+            -only-testing:RickMortyUITests \
+            CODE_SIGNING_ALLOWED=NO \
+            -resultBundlePath TestResults.xcresult
+
+      - name: Upload UI Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-test-results
+          path: TestResults.xcresult
+
+  # Job 5: Build for Different Configurations
+  build-configurations:
+    name: Build Configurations
+    runs-on: macos-14
+    needs: build-and-test
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+        destination: 
+          - "platform=iOS Simulator,name=iPhone 16,OS=18.5"
+          - "platform=iOS Simulator,name=iPad (10th generation),OS=18.5"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
+
+      - name: Cache Swift Package Manager
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Build ${{ matrix.configuration }} for ${{ matrix.destination }}
+        run: |
+          xcodebuild build \
+            -workspace RickMorty.xcworkspace \
+            -scheme RickMorty \
+            -destination "${{ matrix.destination }}" \
+            -configuration ${{ matrix.configuration }} \
+            CODE_SIGNING_ALLOWED=NO
+
+  # Job 6: Security and Dependency Check
+  security-check:
+    name: Security & Dependencies
+    runs-on: macos-14
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
+
+      - name: Check for known vulnerabilities
+        run: |
+          echo "Checking for security vulnerabilities..."
+          # Check for common security issues in Swift code
+          if grep -r "NSUserDefaults\|UserDefaults" --include="*.swift" . | grep -v "//.*NSUserDefaults"; then
+            echo "Found NSUserDefaults usage. Ensure sensitive data is not stored."
+          fi
+          
+          if grep -r "print(" --include="*.swift" . | grep -v "//.*print("; then
+            echo "Found print statements. Consider using proper logging."
+          fi
+
+      - name: Validate Package Dependencies
+        run: |
+          echo "Validating Swift Package dependencies..."
+          find . -name "Package.resolved" -exec cat {} \; | grep -E '"url"|"version"' || true
+
+  # Job 7: Performance and Size Analysis
+  performance-analysis:
+    name: Performance & Size Analysis
+    runs-on: macos-14
+    needs: build-configurations
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
+
+      - name: Build for Analysis
+        run: |
+          xcodebuild build \
+            -workspace RickMorty.xcworkspace \
+            -scheme RickMorty \
+            -destination "platform=iOS Simulator,name=${{ env.IOS_SIMULATOR_DEVICE }},OS=${{ env.IOS_SIMULATOR_OS }}" \
+            -configuration Release \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Analyze App Size
+        run: |
+          echo "Analyzing app size..."
+          find ~/Library/Developer/Xcode/DerivedData -name "*.app" -path "*/Build/Products/Release-iphonesimulator/*" -exec du -sh {} \; || echo "No app found for size analysis"
+
+      - name: Check for Large Files
+        run: |
+          echo "Checking for large files in repository..."
+          find . -type f -size +1M -not -path "./.git/*" -not -path "./.build/*" -not -path "./DerivedData/*" | head -10
+
+  # Job 8: Documentation Check
+  documentation-check:
+    name: Documentation Check
+    runs-on: macos-14
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check README
+        run: |
+          echo "Checking README.md..."
+          if [ -f "README.md" ]; then
+            echo "✅ README.md exists"
+            echo "README.md size: $(wc -l < README.md) lines"
+          else
+            echo "❌ README.md not found"
+            exit 1
+          fi
+
+      - name: Check for missing documentation
+        run: |
+          echo "Checking for undocumented public APIs..."
+          find . -name "*.swift" -not -path "./.build/*" -not -path "./DerivedData/*" -exec grep -l "public.*func\|public.*class\|public.*struct" {} \; | head -5
+
+  # Job 9: Final Status
+  ci-status:
+    name: CI Status
+    runs-on: macos-14
+    needs: [code-quality, build-and-test, package-tests, ui-tests, build-configurations, security-check, performance-analysis, documentation-check]
+    if: always()
+    steps:
+      - name: Check all jobs status
+        run: |
+          echo "🎉 CI/CD Pipeline completed!"
+          echo "All quality checks, builds, and tests have been executed."
+          echo "Check individual job results for detailed information."

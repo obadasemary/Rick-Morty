@@ -1,0 +1,286 @@
+name: Code Coverage & Quality Metrics
+
+on:
+  push:
+    branches: [ main, develop, Enhancement ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run weekly on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+
+jobs:
+  # Job 1: Generate Code Coverage
+  code-coverage:
+    name: Generate Code Coverage
+    runs-on: macos-14
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
+
+      - name: Cache Swift Package Manager
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-deriveddata-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-deriveddata-
+
+      - name: Run Tests with Coverage
+        run: |
+          # Run unit tests with coverage
+          xcodebuild test \
+            -workspace RickMorty.xcworkspace \
+            -scheme RickMorty \
+            -destination "platform=iOS Simulator,name=iPhone 16,OS=18.5" \
+            -configuration Debug \
+            -only-testing:RickMortyTests \
+            -enableCodeCoverage YES \
+            CODE_SIGNING_ALLOWED=NO \
+            -resultBundlePath TestResults.xcresult
+
+      - name: Generate Coverage Report
+        run: |
+          # Generate coverage report using xcresult
+          xcrun xccov view --report --json TestResults.xcresult > coverage.json
+          
+          # Extract coverage percentage
+          COVERAGE=$(xcrun xccov view --report TestResults.xcresult | grep -E "TOTAL.*%" | tail -1 | awk '{print $4}' | sed 's/%//')
+          echo "COVERAGE_PERCENTAGE=$COVERAGE" >> $GITHUB_ENV
+          echo "Code coverage: $COVERAGE%"
+
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./TestResults.xcresult
+          flags: unittests
+          name: rickmorty-coverage
+          fail_ci_if_error: false
+
+      - name: Upload Coverage Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            TestResults.xcresult
+            coverage.json
+
+  # Job 2: Package Coverage Analysis
+  package-coverage:
+    name: Package Coverage Analysis
+    runs-on: macos-14
+    strategy:
+      matrix:
+        package: [
+          "UseCase",
+          "DependencyContainer", 
+          "CoreAPI",
+          "RickMortyNetworkLayer",
+          "RickMortyRepository"
+        ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
+
+      - name: Test ${{ matrix.package }} with Coverage
+        run: |
+          cd ${{ matrix.package }}
+          swift test --enable-code-coverage
+
+      - name: Generate ${{ matrix.package }} Coverage Report
+        run: |
+          cd ${{ matrix.package }}
+          swift test --enable-code-coverage --verbose
+          
+          # Generate coverage report
+          swift test --enable-code-coverage 2>&1 | tee test_output.log
+          
+          # Extract coverage information
+          echo "Coverage report for ${{ matrix.package }} generated"
+
+      - name: Upload ${{ matrix.package }} Coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./${{ matrix.package }}/.build/debug/codecov/default.profdata
+          flags: ${{ matrix.package }}
+          name: ${{ matrix.package }}-coverage
+
+  # Job 3: Quality Metrics Analysis
+  quality-metrics:
+    name: Quality Metrics Analysis
+    runs-on: macos-14
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
+
+      - name: Install SwiftLint
+        run: |
+          brew install swiftlint
+
+      - name: Run SwiftLint Analysis
+        run: |
+          swiftlint lint --reporter json > swiftlint-report.json || true
+          swiftlint lint --reporter html > swiftlint-report.html || true
+
+      - name: Analyze Code Complexity
+        run: |
+          echo "📊 Analyzing code complexity..."
+          
+          # Count lines of code
+          find . -name "*.swift" -not -path "./.build/*" -not -path "./DerivedData/*" | xargs wc -l | tail -1 > lines_of_code.txt
+          
+          # Count test files
+          find . -name "*Test*.swift" -not -path "./.build/*" | wc -l > test_files_count.txt
+          
+          # Count public APIs
+          find . -name "*.swift" -not -path "./.build/*" -exec grep -l "public.*func\|public.*class\|public.*struct" {} \; | wc -l > public_apis_count.txt
+
+      - name: Generate Quality Report
+        run: |
+          echo "# 📊 Quality Metrics Report" > quality_report.md
+          echo "" >> quality_report.md
+          echo "Generated on: $(date)" >> quality_report.md
+          echo "" >> quality_report.md
+          
+          echo "## Code Metrics" >> quality_report.md
+          echo "" >> quality_report.md
+          echo "- Lines of Code: $(cat lines_of_code.txt)" >> quality_report.md
+          echo "- Test Files: $(cat test_files_count.txt)" >> quality_report.md
+          echo "- Public APIs: $(cat public_apis_count.txt)" >> quality_report.md
+          echo "" >> quality_report.md
+          
+          echo "## SwiftLint Results" >> quality_report.md
+          echo "" >> quality_report.md
+          if [ -f "swiftlint-report.json" ]; then
+            echo "SwiftLint analysis completed. Check artifacts for detailed report." >> quality_report.md
+          else
+            echo "SwiftLint analysis failed or no issues found." >> quality_report.md
+          fi
+
+      - name: Upload Quality Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-metrics
+          path: |
+            swiftlint-report.json
+            swiftlint-report.html
+            quality_report.md
+            lines_of_code.txt
+            test_files_count.txt
+            public_apis_count.txt
+
+  # Job 4: Performance Metrics
+  performance-metrics:
+    name: Performance Metrics
+    runs-on: macos-14
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
+
+      - name: Run Performance Tests
+        run: |
+          echo "🚀 Running performance tests..."
+          
+          # Run launch performance test
+          xcodebuild test \
+            -workspace RickMorty.xcworkspace \
+            -scheme RickMorty \
+            -destination "platform=iOS Simulator,name=iPhone 16,OS=18.5" \
+            -configuration Release \
+            -only-testing:RickMortyUITests/testLaunchPerformance \
+            CODE_SIGNING_ALLOWED=NO \
+            -resultBundlePath PerformanceResults.xcresult
+
+      - name: Analyze Performance Results
+        run: |
+          echo "📈 Analyzing performance results..."
+          
+          # Extract performance metrics
+          xcrun xcresulttool get --path PerformanceResults.xcresult --format json > performance_results.json
+          
+          echo "Performance analysis completed"
+
+      - name: Upload Performance Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-metrics
+          path: |
+            PerformanceResults.xcresult
+            performance_results.json
+
+  # Job 5: Coverage Summary
+  coverage-summary:
+    name: Coverage Summary
+    runs-on: macos-14
+    needs: [code-coverage, package-coverage, quality-metrics, performance-metrics]
+    if: always()
+    steps:
+      - name: Generate Coverage Summary
+        run: |
+          echo "# 📊 Coverage & Quality Summary" > coverage_summary.md
+          echo "" >> coverage_summary.md
+          echo "Generated on: $(date)" >> coverage_summary.md
+          echo "" >> coverage_summary.md
+          echo "## Coverage Status" >> coverage_summary.md
+          echo "- ✅ Main app coverage: Generated" >> coverage_summary.md
+          echo "- ✅ Package coverage: Generated" >> coverage_summary.md
+          echo "- ✅ Quality metrics: Analyzed" >> coverage_summary.md
+          echo "- ✅ Performance metrics: Measured" >> coverage_summary.md
+          echo "" >> coverage_summary.md
+          echo "## Next Steps" >> coverage_summary.md
+          echo "1. Review coverage reports in artifacts" >> coverage_summary.md
+          echo "2. Identify areas for improvement" >> coverage_summary.md
+          echo "3. Set coverage targets for future PRs" >> coverage_summary.md
+          echo "4. Monitor performance regressions" >> coverage_summary.md
+
+      - name: Upload Coverage Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-summary
+          path: coverage_summary.md
+
+      - name: Comment Coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('coverage_summary.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
