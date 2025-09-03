@@ -103,7 +103,7 @@ public struct CharacterDetailsView: View {
             }
         }
         .edgesIgnoringSafeArea(.top)
-        .background(Color(.systemBackground))
+        .background(Color.primary.colorInvert())
         .navigationBarBackButtonHidden(true) // 👈 Hides the default back arrow
         .navigationBarHidden(true)
     }
