@@ -7,9 +7,7 @@ let package = Package(
     name: "DependencyContainer",
     platforms: [
         .iOS(.v17),
-        .macOS(.v14),
-        .tvOS(.v17),
-        .watchOS(.v10)
+        .macOS(.v14)
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
