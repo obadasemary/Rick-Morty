@@ -1,4 +1,4 @@
-name: Release Pipeline
+name: Release
 
 on:
   push:
@@ -12,208 +12,126 @@ on:
         type: string
 
 env:
+  NSUnbufferedIO: "YES"
   IOS_SIMULATOR_OS: "18.6"
-  IOS_SIMULATOR_NAME: "iPhone 16"
-  SCHEME: "RickMorty"
-  WORKSPACE: "RickMorty.xcworkspace"
-  DESTINATION: "platform=iOS Simulator,name=iPhone 16,OS=18.6"
 
 jobs:
-  # Pre-release validation
-  pre-release-validation:
+  # Run tests before release
+  test:
     runs-on: macos-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Validate version
-        run: |
-          if [[ "${{ github.event_name }}" == "push" ]]; then
-            VERSION="${{ github.ref_name }}"
-          else
-            VERSION="${{ github.event.inputs.version }}"
-          fi
-          
-          echo "Validating version: $VERSION"
-          
-          # Check version format
-          if [[ ! $VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "❌ Invalid version format. Expected: v1.0.0"
-            exit 1
-          fi
-          
-          echo "✅ Version format is valid"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-xcode-release-${{ hashFiles('**/*.xcodeproj/project.pbxproj', '**/*.xcworkspace/contents.xcworkspacedata') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-release-
 
-      - name: Run full test suite
+      - name: Test all packages
         run: |
           set -euo pipefail
-          echo "::group::Running Pre-Release Tests"
-          
-          # Test all packages
-          for package_dir in */; do
-            if [ -f "${package_dir}Package.swift" ] && [[ "$package_dir" != "FeedListView/" ]]; then
-              echo "Testing $package_dir"
-              (cd "$package_dir" && swift test)
-            fi
+          echo "::group::Testing all packages"
+          for package in RickMortyRepository DependencyContainer UseCase CoreAPI RickMortyNetworkLayer; do
+            echo "Testing $package..."
+            cd "$package" && swift test && cd ..
           done
-          
-          # Test main app
-          xcodebuild test \
-            -workspace "$WORKSPACE" \
-            -scheme "$SCHEME" \
-            -destination "$DESTINATION" \
-            -skipMacroValidation
-          
-          echo "✅ All tests passed"
           echo "::endgroup::"
 
-  # Build release artifacts
-  build-release:
-    runs-on: macos-latest
-    needs: pre-release-validation
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Build release version
+      - name: Test main app
         run: |
           set -euo pipefail
-          echo "::group::Building Release Version"
-          
           xcodebuild \
-            -workspace "$WORKSPACE" \
-            -scheme "$SCHEME" \
-            -destination "$DESTINATION" \
-            -configuration Release \
+            -workspace "RickMorty.xcworkspace" \
+            -scheme "RickMorty" \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
             -skipMacroValidation \
-            build
-          
-          echo "✅ Release build completed"
-          echo "::endgroup::"
+            test
 
-      - name: Archive app
-        run: |
-          set -euo pipefail
-          echo "::group::Creating Archive"
-          
-          xcodebuild archive \
-            -workspace "$WORKSPACE" \
-            -scheme "$SCHEME" \
-            -destination "generic/platform=iOS" \
-            -archivePath "build/RickMorty.xcarchive" \
-            -skipMacroValidation
-          
-          echo "✅ Archive created"
-          echo "::endgroup::"
-
-      - name: Export IPA
-        run: |
-          set -euo pipefail
-          echo "::group::Exporting IPA"
-          
-          xcodebuild -exportArchive \
-            -archivePath "build/RickMorty.xcarchive" \
-            -exportPath "build/export" \
-            -exportOptionsPlist "exportOptions.plist"
-          
-          echo "✅ IPA exported"
-          echo "::endgroup::"
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-artifacts-${{ env.VERSION }}
-          path: |
-            build/RickMorty.xcarchive
-            build/export/*.ipa
-          retention-days: 30
-
-  # Create GitHub release
-  create-release:
+  # Build for release
+  build:
     runs-on: macos-latest
-    needs: [pre-release-validation, build-release]
+    needs: test
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
+      - name: Cache DerivedData
+        uses: actions/cache@v4
         with:
-          name: release-artifacts-${{ env.VERSION }}
-          path: build/
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-xcode-release-build-${{ hashFiles('**/*.xcodeproj/project.pbxproj', '**/*.xcworkspace/contents.xcworkspacedata') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-release-build-
 
-      - name: Create GitHub Release
+      - name: Build for release
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -workspace "RickMorty.xcworkspace" \
+            -scheme "RickMorty" \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -skipMacroValidation \
+            -configuration Release \
+            clean build
+
+  # Create release
+  release:
+    runs-on: macos-latest
+    needs: [test, build]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.VERSION }}
-          release_name: Release ${{ env.VERSION }}
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: RickMorty ${{ steps.version.outputs.version }}
           body: |
-            ## 🚀 RickMorty App Release ${{ env.VERSION }}
+            ## RickMorty ${{ steps.version.outputs.version }}
             
-            ### 📱 What's New
-            - Comprehensive unit tests for RickMortyRepository
-            - macOS 14.0 support with @Observable framework
-            - Enhanced CI/CD pipeline
-            - Improved error handling and test coverage
+            ### Features
+            - Clean Architecture implementation
+            - Swift Package Manager modules
+            - Comprehensive unit testing
+            - UI testing suite
+            - @Observable framework integration
+            - Cross-platform support (iOS 17+ / macOS 14+)
             
-            ### 🧪 Test Coverage
-            - ✅ RickMortyRepository: 13 unit tests
-            - ✅ UseCase: Comprehensive business logic tests
-            - ✅ DependencyContainer: DI pattern tests
-            - ✅ CoreAPI: Endpoint and data model tests
-            - ✅ RickMortyNetworkLayer: Network service tests
-            - ✅ FeedView: ViewModel and UI tests
+            ### Architecture
+            - **Repository Layer**: RickMortyRepository
+            - **Use Case Layer**: UseCase
+            - **Network Layer**: RickMortyNetworkLayer
+            - **API Layer**: CoreAPI
+            - **Dependency Injection**: DependencyContainer
             
-            ### 📦 Architecture
-            - Clean Architecture with Swift Packages
-            - Dependency Injection with DIContainer
-            - Swift Concurrency (async/await)
-            - @Observable framework for state management
+            ### Testing
+            - Unit tests for all business logic
+            - Integration tests for package interactions
+            - UI tests for user interface
+            - Build verification for compilation
             
-            ### 🔧 Technical Details
-            - **Platform Support:** iOS 17.0+, macOS 14.0+
-            - **Swift Version:** 6.1+
-            - **Xcode Version:** 16.4+
-            - **Dependencies:** Swift Package Manager
+            ### Platform Support
+            - iOS 17.0+
+            - macOS 14.0+ (for @Observable framework)
             
-            ### 📋 Installation
-            1. Download the IPA file from the assets below
-            2. Install via Xcode or TestFlight
-            3. Ensure iOS 17.0+ for optimal experience
-            
-            ### 🐛 Bug Reports
-            Please report any issues in the [Issues](https://github.com/obadasemary/Rick-Morty/issues) section.
+            ### Swift Concurrency
+            - @MainActor isolation
+            - async/await patterns
+            - Sendable conformance
           draft: false
           prerelease: false
-
-      - name: Upload Release Assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/export/RickMorty.ipa
-          asset_name: RickMorty-${{ env.VERSION }}.ipa
-          asset_content_type: application/octet-stream
-
-  # Post-release tasks
-  post-release:
-    runs-on: macos-latest
-    needs: [pre-release-validation, build-release, create-release]
-    if: always()
-    steps:
-      - name: Release Summary
-        run: |
-          echo "::group::Release Summary"
-          echo "🎉 Release ${{ env.VERSION }} completed successfully!"
-          echo ""
-          echo "📊 Release Statistics:"
-          echo "✅ Pre-release validation: ${{ needs.pre-release-validation.result }}"
-          echo "✅ Build process: ${{ needs.build-release.result }}"
-          echo "✅ GitHub release: ${{ needs.create-release.result }}"
-          echo ""
-          echo "🔗 Release URL: https://github.com/obadasemary/Rick-Morty/releases/tag/${{ env.VERSION }}"
-          echo "::endgroup::"

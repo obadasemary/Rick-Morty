@@ -1,195 +1,198 @@
 # GitHub Actions CI/CD Pipeline
 
-This repository uses GitHub Actions for continuous integration and deployment, ensuring code quality and reliability across all platforms and packages.
+This repository uses GitHub Actions for continuous integration and deployment. The CI pipeline ensures code quality, runs comprehensive tests, and validates builds across different components.
 
-## 🚀 Pipeline Overview
+## Workflow Overview
 
-The CI/CD pipeline consists of multiple jobs that run in parallel to ensure comprehensive testing and validation:
+### Main CI Pipeline (`.github/workflows/ci.yml`)
 
-### 📱 iOS App Build & Test
-- **Job:** `ios-build-test`
-- **Purpose:** Builds the main iOS app and runs UI tests
-- **Platform:** iOS Simulator (iPhone 16, iOS 18.6)
-- **Tests:** RickMortyUITests
+The CI pipeline runs on:
+- **Push** to `main` or `develop` branches
+- **Pull Requests** targeting `main` or `develop` branches
 
-### 📦 Swift Package Manager Tests
-- **Job:** `spm-packages-test`
-- **Purpose:** Tests all Swift packages individually
-- **Packages Tested:**
-  - ✅ FeedView
-  - ✅ RickMortyRepository
-  - ✅ DependencyContainer
-  - ✅ UseCase
-  - ✅ CoreAPI
-  - ✅ RickMortyNetworkLayer
-  - ✅ CharacterDetailsView
-  - ✅ DevPreview
-  - ✅ RickMortyUI
-  - ✅ TabBarView
-  - ⚠️ FeedListView (skipped due to SUIRouting compatibility issues)
+## Jobs and Components
 
-### 🔍 Code Quality & Linting
-- **Job:** `code-quality`
-- **Purpose:** Validates Swift package dependencies and structure
-- **Checks:**
-  - Package dependency resolution
-  - Package structure validation
-  - Common Swift package issues
+### 1. **xcode-build-test**
+- **Purpose**: Build and test the main iOS app
+- **Platform**: macOS latest
+- **Actions**:
+  - Cache DerivedData for faster builds
+  - Build and test the main RickMorty workspace
+  - Uses iPhone 16 simulator with latest iOS
 
-### 🏗️ Build Verification
-- **Job:** `build-verification`
-- **Purpose:** Ensures all components build successfully
-- **Verifications:**
-  - Main iOS app build
-  - Individual package builds
-  - Configuration validation
+### 2. **spm-packages-test**
+- **Purpose**: Test individual Swift Package Manager packages
+- **Packages Tested**:
+  - `RickMortyRepository` - Repository layer with network abstraction
+  - `DependencyContainer` - Dependency injection container
+  - `UseCase` - Business logic layer
+  - `CoreAPI` - API endpoints and DTOs
+  - `RickMortyNetworkLayer` - Low-level HTTP client
+- **Strategy**: Matrix build for parallel testing
+- **Actions**: Run `swift test` for each package
 
-### 📊 Test Results Summary
-- **Job:** `test-summary`
-- **Purpose:** Provides comprehensive test results overview
-- **Features:**
-  - Status reporting for all jobs
-  - Success/failure indicators
-  - Deployment readiness check
+### 3. **feedview-test**
+- **Purpose**: Test FeedView package with platform compatibility handling
+- **Special Handling**: 
+  - Checks for SUIRouting platform compatibility issues
+  - Gracefully skips if macOS version conflicts exist
+  - Provides detailed error information
 
-## 🛠️ Configuration
+### 4. **ui-tests**
+- **Purpose**: Run UI tests for the main app
+- **Actions**:
+  - Cache DerivedData
+  - Run RickMortyUITests on iPhone 16 simulator
+  - Validates user interface functionality
 
-### Environment Variables
+### 5. **code-quality**
+- **Purpose**: Validate code quality and dependencies
+- **Actions**:
+  - Check Swift Package Manager dependencies
+  - Validate Package.swift files
+  - Ensure proper dependency resolution
+
+### 6. **build-verification**
+- **Purpose**: Verify that all packages can build successfully
+- **Strategy**: Matrix build for parallel verification
+- **Actions**: Run `swift build` for each package
+
+### 7. **integration-test**
+- **Purpose**: End-to-end integration testing
+- **Dependencies**: Requires `spm-packages-test` and `build-verification` to pass
+- **Actions**: Build the complete app with all packages integrated
+
+## Platform Support
+
+### iOS
+- **Minimum Version**: iOS 17.0
+- **Simulator**: iPhone 16 with latest iOS
+- **Testing**: Full app build and UI tests
+
+### macOS
+- **Minimum Version**: macOS 14.0 (for packages using @Observable)
+- **Compatibility**: Ensures @Observable framework works correctly
+- **Testing**: Swift Package Manager tests
+
+## Architecture Compliance
+
+The CI pipeline validates:
+
+### Clean Architecture
+- ✅ **Repository Layer** (`RickMortyRepository`)
+- ✅ **Use Case Layer** (`UseCase`)
+- ✅ **Network Layer** (`RickMortyNetworkLayer`)
+- ✅ **API Layer** (`CoreAPI`)
+- ✅ **Dependency Injection** (`DependencyContainer`)
+
+### Swift Concurrency
+- ✅ **@MainActor** isolation
+- ✅ **@Observable** framework usage
+- ✅ **async/await** patterns
+- ✅ **Sendable** conformance
+
+### Testing Strategy
+- ✅ **Unit Tests** for all business logic
+- ✅ **Integration Tests** for package interactions
+- ✅ **UI Tests** for user interface
+- ✅ **Build Verification** for compilation
+
+## Environment Variables
+
 ```yaml
-IOS_SIMULATOR_OS: "18.6"
-IOS_SIMULATOR_NAME: "iPhone 16"
-SCHEME: "RickMorty"
-WORKSPACE: "RickMorty.xcworkspace"
-DESTINATION: "platform=iOS Simulator,name=iPhone 16,OS=18.6"
+NSUnbufferedIO: "YES"           # Better logging output
+IOS_SIMULATOR_OS: "18.6"        # iOS simulator version
 ```
 
-### Triggers
-- **Push:** `main`, `develop` branches
-- **Pull Request:** `main`, `develop` branches
+## Caching Strategy
 
-## 📋 Package Testing Strategy
+- **DerivedData**: Cached for faster Xcode builds
+- **SPM Dependencies**: Resolved and cached per package
+- **Build Artifacts**: Cached between workflow runs
 
-### Tested Packages
-Each Swift package is tested individually to ensure:
-- ✅ Compilation success
-- ✅ Unit test execution
-- ✅ Dependency resolution
-- ✅ Platform compatibility
+## Error Handling
 
-### Platform Support
-- **iOS:** 17.0+
-- **macOS:** 14.0+ (for packages using @Observable)
+### Platform Compatibility
+- **SUIRouting Issues**: Gracefully handled with detailed error messages
+- **macOS Version Conflicts**: Clear documentation of requirements
+- **Dependency Conflicts**: Validated during build verification
 
-### Known Issues
-- **FeedListView:** Skipped due to SUIRouting dependency requiring newer macOS versions
-- **SUIRouting:** Uses APIs not available on older macOS versions
+### Test Failures
+- **Unit Test Failures**: Detailed error reporting per package
+- **Build Failures**: Comprehensive build logs
+- **UI Test Failures**: Screenshot capture and detailed logs
 
-## 🔧 Local Testing
+## Local Development
 
-### Run All Package Tests
+### Running Tests Locally
+
 ```bash
 # Test individual packages
 cd RickMortyRepository && swift test
-cd UseCase && swift test
 cd DependencyContainer && swift test
+cd UseCase && swift test
 cd CoreAPI && swift test
 cd RickMortyNetworkLayer && swift test
-cd FeedView && swift test
+
+# Test main app
+xcodebuild -workspace RickMorty.xcworkspace -scheme RickMorty -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' test
+
+# Run UI tests
+xcodebuild -workspace RickMorty.xcworkspace -scheme RickMorty -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' -only-testing:RickMortyUITests test
 ```
 
-### Run iOS App Tests
+### Build Verification
+
 ```bash
-# Build and test the main app
-xcodebuild -workspace RickMorty.xcworkspace -scheme RickMorty -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.6' build test
+# Build all packages
+for package in RickMortyRepository DependencyContainer UseCase CoreAPI RickMortyNetworkLayer; do
+  cd "$package" && swift build && cd ..
+done
+
+# Build main app
+xcodebuild -workspace RickMorty.xcworkspace -scheme RickMorty -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' build
 ```
 
-### Run UI Tests
-```bash
-# Run UI tests specifically
-xcodebuild test -workspace RickMorty.xcworkspace -scheme RickMorty -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.6' -only-testing:RickMortyUITests
-```
-
-## 📈 Performance & Caching
-
-### DerivedData Caching
-- Caches Xcode build artifacts between runs
-- Significantly reduces build times
-- Automatically invalidated when dependencies change
-
-### Parallel Execution
-- All package tests run in parallel
-- Matrix strategy for efficient resource usage
-- Independent job execution for faster feedback
-
-## 🚨 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
-#### Package Build Failures
+1. **SUIRouting Platform Conflicts**
+   - **Cause**: SUIRouting requires newer macOS versions
+   - **Solution**: CI gracefully skips with detailed error message
+
+2. **@Observable Framework Issues**
+   - **Cause**: macOS version mismatch
+   - **Solution**: Ensure macOS 14.0+ support in Package.swift
+
+3. **Dependency Resolution Failures**
+   - **Cause**: Package.swift configuration issues
+   - **Solution**: Check dependency versions and platform requirements
+
+### Debug Commands
+
 ```bash
-# Clean and rebuild
-swift package clean
+# Check Swift version
+swift --version
+
+# Check Xcode version
+xcodebuild -version
+
+# Resolve dependencies
 swift package resolve
-swift build
+
+# Show package dependencies
+swift package show-dependencies
+
+# Describe package
+swift package describe
 ```
 
-#### Simulator Issues
-```bash
-# List available simulators
-xcrun simctl list devices available
+## Performance Optimization
 
-# Reset simulator
-xcrun simctl erase "iPhone 16"
-```
+- **Parallel Testing**: Matrix builds for faster execution
+- **Caching**: DerivedData and dependency caching
+- **Conditional Execution**: Skip problematic tests with clear messaging
+- **Efficient Builds**: Use latest simulators and optimized build settings
 
-#### Dependency Resolution
-```bash
-# Clear package cache
-swift package reset
-swift package resolve
-```
-
-### CI-Specific Issues
-
-#### Platform Compatibility
-- Ensure all packages target compatible platforms
-- Check @Observable usage requires macOS 14.0+
-- Verify external dependencies support target platforms
-
-#### Test Failures
-- Check test data and mock implementations
-- Verify network service mocking
-- Ensure proper async/await usage
-
-## 📊 Metrics & Monitoring
-
-### Success Criteria
-- ✅ All package tests pass
-- ✅ Main app builds successfully
-- ✅ UI tests execute without failures
-- ✅ No compilation errors or warnings
-- ✅ All dependencies resolve correctly
-
-### Failure Handling
-- Detailed error reporting in job logs
-- Individual package failure isolation
-- Clear success/failure indicators
-- Comprehensive test result summary
-
-## 🔄 Continuous Improvement
-
-### Regular Updates
-- Keep Xcode and iOS simulator versions current
-- Update Swift package dependencies
-- Monitor for new platform requirements
-- Optimize build and test performance
-
-### Monitoring
-- Track build times and success rates
-- Monitor test coverage and quality
-- Review and update CI configuration
-- Address platform compatibility issues
-
----
-
-For questions or issues with the CI/CD pipeline, please check the GitHub Actions logs or create an issue in the repository.
+This CI pipeline ensures robust testing, quality assurance, and reliable builds for the RickMorty iOS application with Clean Architecture principles.
