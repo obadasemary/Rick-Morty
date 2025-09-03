@@ -14,7 +14,7 @@ import UseCase
 @Observable
 public final class FeedRepository {
     
-    private let networkService: NetworkService
+    internal let networkService: NetworkService
     
     public init(networkService: NetworkService) {
         self.networkService = networkService
