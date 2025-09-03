@@ -53,6 +53,7 @@ jobs:
           - "UseCase"
           - "CoreAPI"
           - "RickMortyNetworkLayer"
+          - "FeedView"
     steps:
       - uses: actions/checkout@v4
 
@@ -90,6 +91,7 @@ jobs:
           echo "  - UseCase"
           echo "  - CoreAPI"
           echo "  - RickMortyNetworkLayer"
+          echo "  - FeedView"
           echo ""
           echo "📊 Coverage reports uploaded to Codecov"
           echo "🔍 View detailed coverage at: https://codecov.io/gh/obadasemary/Rick-Morty"
