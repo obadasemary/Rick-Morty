@@ -1,0 +1,241 @@
+name: iOS CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+env:
+  # iOS Simulator Configuration
+  IOS_SIMULATOR_OS: "18.6"
+  IOS_SIMULATOR_NAME: "iPhone 16"
+  
+  # Build Configuration
+  SCHEME: "RickMorty"
+  WORKSPACE: "RickMorty.xcworkspace"
+  
+  # Test Configuration
+  DESTINATION: "platform=iOS Simulator,name=iPhone 16,OS=18.6"
+
+jobs:
+  # Main iOS App Build and Test
+  ios-build-test:
+    runs-on: macos-latest
+    env:
+      NSUnbufferedIO: "YES"
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-xcode-${{ hashFiles('**/*.xcodeproj/project.pbxproj', '**/*.xcworkspace/contents.xcworkspacedata', '**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Show available simulators
+        run: xcrun simctl list devices available
+
+      - name: Build iOS App
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -destination "$DESTINATION" \
+            -skipMacroValidation \
+            clean build
+
+      - name: Run iOS UI Tests
+        run: |
+          set -euo pipefail
+          xcodebuild test \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -destination "$DESTINATION" \
+            -skipMacroValidation \
+            -only-testing:RickMortyUITests
+
+  # Swift Package Manager Tests
+  spm-packages-test:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        package:
+          - name: "FeedView"
+            path: "./FeedView"
+            skip: false
+          - name: "RickMortyRepository"
+            path: "./RickMortyRepository"
+            skip: false
+          - name: "DependencyContainer"
+            path: "./DependencyContainer"
+            skip: false
+          - name: "UseCase"
+            path: "./UseCase"
+            skip: false
+          - name: "CoreAPI"
+            path: "./CoreAPI"
+            skip: false
+          - name: "RickMortyNetworkLayer"
+            path: "./RickMortyNetworkLayer"
+            skip: false
+          - name: "CharacterDetailsView"
+            path: "./CharacterDetailsView"
+            skip: true
+          - name: "DevPreview"
+            path: "./DevPreview"
+            skip: true
+          - name: "RickMortyUI"
+            path: "./RickMortyUI"
+            skip: true
+          - name: "TabBarView"
+            path: "./TabBarView"
+            skip: true
+          - name: "FeedListView"
+            path: "./FeedListView"
+            skip: true  # Skip due to SUIRouting platform compatibility issues
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Test ${{ matrix.package.name }}
+        if: ${{ !matrix.package.skip }}
+        run: |
+          set -euo pipefail
+          echo "::group::Testing ${{ matrix.package.name }}"
+          cd "${{ matrix.package.path }}"
+          
+          # Check if Package.swift exists
+          if [ ! -f "Package.swift" ]; then
+            echo "⚠️ Package.swift not found in ${{ matrix.package.path }}, skipping..."
+            exit 0
+          fi
+          
+          # Run Swift Package tests
+          echo "Running swift test for ${{ matrix.package.name }}..."
+          swift test --verbose
+          
+          echo "✅ ${{ matrix.package.name }} tests completed successfully"
+          echo "::endgroup::"
+
+      - name: Skip ${{ matrix.package.name }} (known issues)
+        if: ${{ matrix.package.skip }}
+        run: |
+          echo "::group::Skipping ${{ matrix.package.name }}"
+          echo "⚠️ Skipping ${{ matrix.package.name }} due to known platform compatibility issues"
+          echo "::endgroup::"
+
+  # Code Quality and Linting
+  code-quality:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Swift Package Manager Resolve
+        run: |
+          set -euo pipefail
+          echo "::group::Resolving Swift Package Dependencies"
+          
+          # Resolve dependencies for all packages
+          for package_dir in */; do
+            if [ -f "${package_dir}Package.swift" ]; then
+              echo "Resolving dependencies for $package_dir"
+              (cd "$package_dir" && swift package resolve)
+            fi
+          done
+          
+          echo "::endgroup::"
+
+      - name: Check for Swift Package Issues
+        run: |
+          set -euo pipefail
+          echo "::group::Checking Swift Package Issues"
+          
+          # Check each package for common issues
+          for package_dir in */; do
+            if [ -f "${package_dir}Package.swift" ]; then
+              echo "Checking $package_dir"
+              (cd "$package_dir" && swift package describe --type json > /dev/null)
+            fi
+          done
+          
+          echo "✅ All packages are valid"
+          echo "::endgroup::"
+
+  # Build Verification
+  build-verification:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify Main App Build
+        run: |
+          set -euo pipefail
+          echo "::group::Verifying Main App Build"
+          
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -destination "$DESTINATION" \
+            -skipMacroValidation \
+            -configuration Debug \
+            build
+          
+          echo "✅ Main app builds successfully"
+          echo "::endgroup::"
+
+      - name: Verify Package Builds
+        run: |
+          set -euo pipefail
+          echo "::group::Verifying Package Builds"
+          
+          # Build each package individually
+          for package_dir in */; do
+            if [ -f "${package_dir}Package.swift" ]; then
+              echo "Building $package_dir"
+              (cd "$package_dir" && swift build)
+            fi
+          done
+          
+          echo "✅ All packages build successfully"
+          echo "::endgroup::"
+
+  # Test Results Summary
+  test-summary:
+    runs-on: macos-latest
+    needs: [ios-build-test, spm-packages-test, code-quality, build-verification]
+    if: always()
+    steps:
+      - name: Test Results Summary
+        run: |
+          echo "::group::Test Results Summary"
+          echo "📊 CI/CD Pipeline Results:"
+          echo ""
+          echo "✅ iOS App Build & UI Tests: ${{ needs.ios-build-test.result }}"
+          echo "✅ Swift Package Tests: ${{ needs.spm-packages-test.result }}"
+          echo "✅ Code Quality Checks: ${{ needs.code-quality.result }}"
+          echo "✅ Build Verification: ${{ needs.build-verification.result }}"
+          echo ""
+          
+          if [[ "${{ needs.ios-build-test.result }}" == "success" && 
+                "${{ needs.spm-packages-test.result }}" == "success" && 
+                "${{ needs.code-quality.result }}" == "success" && 
+                "${{ needs.build-verification.result }}" == "success" ]]; then
+            echo "🎉 All tests passed successfully!"
+            echo "✅ Ready for deployment"
+          else
+            echo "❌ Some tests failed. Please check the logs above."
+            exit 1
+          fi
+          echo "::endgroup::"

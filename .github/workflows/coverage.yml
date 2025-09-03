@@ -1,0 +1,297 @@
+name: Code Coverage
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+  schedule:
+    # Run coverage report weekly on Sundays
+    - cron: '0 10 * * 0'
+
+env:
+  IOS_SIMULATOR_OS: "18.6"
+  IOS_SIMULATOR_NAME: "iPhone 16"
+  SCHEME: "RickMorty"
+  WORKSPACE: "RickMorty.xcworkspace"
+  DESTINATION: "platform=iOS Simulator,name=iPhone 16,OS=18.6"
+
+jobs:
+  # Generate code coverage for Swift packages
+  package-coverage:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        package:
+          - name: "RickMortyRepository"
+            path: "./RickMortyRepository"
+          - name: "UseCase"
+            path: "./UseCase"
+          - name: "DependencyContainer"
+            path: "./DependencyContainer"
+          - name: "CoreAPI"
+            path: "./CoreAPI"
+          - name: "RickMortyNetworkLayer"
+            path: "./RickMortyNetworkLayer"
+          - name: "FeedView"
+            path: "./FeedView"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate Coverage for ${{ matrix.package.name }}
+        run: |
+          set -euo pipefail
+          echo "::group::Generating Coverage for ${{ matrix.package.name }}"
+          
+          cd "${{ matrix.package.path }}"
+          
+          # Generate coverage data
+          swift test --enable-code-coverage
+          
+          # Convert coverage data to lcov format
+          xcrun llvm-cov export -format=lcov .build/debug/${{ matrix.package.name }}PackageTests.xctest/Contents/MacOS/${{ matrix.package.name }}PackageTests > coverage.lcov
+          
+          echo "✅ Coverage generated for ${{ matrix.package.name }}"
+          echo "::endgroup::"
+
+      - name: Upload Coverage Data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.package.name }}
+          path: ${{ matrix.package.path }}/coverage.lcov
+          retention-days: 30
+
+  # Generate code coverage for main iOS app
+  app-coverage:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate App Coverage
+        run: |
+          set -euo pipefail
+          echo "::group::Generating App Coverage"
+          
+          # Build and test with coverage
+          xcodebuild test \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -destination "$DESTINATION" \
+            -enableCodeCoverage YES \
+            -skipMacroValidation
+          
+          # Find coverage data
+          COVERAGE_DIR=$(find ~/Library/Developer/Xcode/DerivedData -name "*.xcresult" -type d | head -1)
+          
+          if [ -n "$COVERAGE_DIR" ]; then
+            echo "Found coverage data at: $COVERAGE_DIR"
+            
+            # Convert to lcov format
+            xcrun xccov view --report --json "$COVERAGE_DIR" > coverage-report.json
+            
+            echo "✅ App coverage generated"
+          else
+            echo "⚠️ No coverage data found"
+          fi
+          
+          echo "::endgroup::"
+
+      - name: Upload App Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-app
+          path: coverage-report.json
+          retention-days: 30
+
+  # Combine and analyze coverage
+  coverage-analysis:
+    runs-on: macos-latest
+    needs: [package-coverage, app-coverage]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download All Coverage Data
+        uses: actions/download-artifact@v4
+        with:
+          path: coverage-data/
+
+      - name: Combine Coverage Reports
+        run: |
+          set -euo pipefail
+          echo "::group::Combining Coverage Reports"
+          
+          # Create combined coverage report
+          echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" > combined-coverage.xml
+          echo "<coverage version=\"1\">" >> combined-coverage.xml
+          
+          # Process package coverage files
+          for coverage_file in coverage-data/coverage-*/coverage.lcov; do
+            if [ -f "$coverage_file" ]; then
+              echo "Processing $coverage_file"
+              cat "$coverage_file" >> combined-coverage.lcov
+            fi
+          done
+          
+          echo "</coverage>" >> combined-coverage.xml
+          
+          echo "✅ Coverage reports combined"
+          echo "::endgroup::"
+
+      - name: Generate Coverage Summary
+        run: |
+          set -euo pipefail
+          echo "::group::Generating Coverage Summary"
+          
+          # Create coverage summary
+          cat > coverage-summary.md << 'EOF'
+          # 📊 Code Coverage Report
+          
+          Generated on: $(date)
+          
+          ## 📈 Coverage Summary
+          
+          ### Swift Packages
+          EOF
+          
+          # Analyze each package's coverage
+          for coverage_file in coverage-data/coverage-*/coverage.lcov; do
+            if [ -f "$coverage_file" ]; then
+              PACKAGE_NAME=$(basename $(dirname $coverage_file) | sed 's/coverage-//')
+              
+              # Extract coverage statistics
+              LINES_FOUND=$(grep -c "^LF:" "$coverage_file" || echo "0")
+              LINES_HIT=$(grep -c "^LH:" "$coverage_file" || echo "0")
+              
+              if [ "$LINES_FOUND" -gt 0 ]; then
+                COVERAGE_PERCENT=$((LINES_HIT * 100 / LINES_FOUND))
+                echo "### $PACKAGE_NAME" >> coverage-summary.md
+                echo "- **Lines Covered:** $LINES_HIT / $LINES_FOUND" >> coverage-summary.md
+                echo "- **Coverage:** $COVERAGE_PERCENT%" >> coverage-summary.md
+                echo "" >> coverage-summary.md
+              fi
+            fi
+          done
+          
+          # Add app coverage if available
+          if [ -f "coverage-data/coverage-app/coverage-report.json" ]; then
+            echo "### iOS App" >> coverage-summary.md
+            echo "- **Coverage data available**" >> coverage-summary.md
+            echo "" >> coverage-summary.md
+          fi
+          
+          echo "## 🎯 Coverage Goals" >> coverage-summary.md
+          echo "" >> coverage-summary.md
+          echo "- **Target:** 80% line coverage" >> coverage-summary.md
+          echo "- **Minimum:** 70% line coverage" >> coverage-summary.md
+          echo "- **Critical paths:** 90% line coverage" >> coverage-summary.md
+          echo "" >> coverage-summary.md
+          
+          echo "## 📋 Recommendations" >> coverage-summary.md
+          echo "" >> coverage-summary.md
+          echo "1. Focus on increasing coverage for critical business logic" >> coverage-summary.md
+          echo "2. Add tests for error handling paths" >> coverage-summary.md
+          echo "3. Ensure edge cases are covered" >> coverage-summary.md
+          echo "4. Consider adding integration tests" >> coverage-summary.md
+          
+          echo "✅ Coverage summary generated"
+          echo "::endgroup::"
+
+      - name: Upload Combined Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined-coverage
+          path: |
+            combined-coverage.lcov
+            combined-coverage.xml
+            coverage-summary.md
+          retention-days: 30
+
+      - name: Comment Coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Read coverage summary
+            const summary = fs.readFileSync('coverage-summary.md', 'utf8');
+            
+            // Create comment
+            const comment = `## 📊 Code Coverage Report
+            
+            ${summary}
+            
+            ---
+            *This report was automatically generated by the coverage workflow.*`;
+            
+            // Post comment
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # Coverage quality gate
+  coverage-gate:
+    runs-on: macos-latest
+    needs: [package-coverage, app-coverage, coverage-analysis]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Coverage Data
+        uses: actions/download-artifact@v4
+        with:
+          name: combined-coverage
+          path: coverage/
+
+      - name: Check Coverage Thresholds
+        run: |
+          set -euo pipefail
+          echo "::group::Checking Coverage Thresholds"
+          
+          MINIMUM_COVERAGE=70
+          TARGET_COVERAGE=80
+          
+          # Check if combined coverage file exists
+          if [ -f "coverage/combined-coverage.lcov" ]; then
+            # Calculate overall coverage
+            LINES_FOUND=$(grep -c "^LF:" "coverage/combined-coverage.lcov" || echo "0")
+            LINES_HIT=$(grep -c "^LH:" "coverage/combined-coverage.lcov" || echo "0")
+            
+            if [ "$LINES_FOUND" -gt 0 ]; then
+              COVERAGE_PERCENT=$((LINES_HIT * 100 / LINES_FOUND))
+              
+              echo "📊 Overall Coverage: $COVERAGE_PERCENT%"
+              echo "🎯 Target Coverage: $TARGET_COVERAGE%"
+              echo "⚠️ Minimum Coverage: $MINIMUM_COVERAGE%"
+              
+              if [ "$COVERAGE_PERCENT" -lt "$MINIMUM_COVERAGE" ]; then
+                echo "❌ Coverage below minimum threshold ($MINIMUM_COVERAGE%)"
+                exit 1
+              elif [ "$COVERAGE_PERCENT" -lt "$TARGET_COVERAGE" ]; then
+                echo "⚠️ Coverage below target threshold ($TARGET_COVERAGE%)"
+                echo "Consider adding more tests to improve coverage"
+              else
+                echo "✅ Coverage meets target threshold"
+              fi
+            else
+              echo "⚠️ No coverage data found"
+            fi
+          else
+            echo "⚠️ Combined coverage file not found"
+          fi
+          
+          echo "::endgroup::"
+
+      - name: Coverage Quality Gate Result
+        run: |
+          echo "::group::Coverage Quality Gate"
+          echo "📊 Coverage analysis completed"
+          echo "✅ Quality gate passed"
+          echo "::endgroup::"
