@@ -1,4 +1,5 @@
-# RickMorty iOS App
+# Rick & Morty iOS App
+
 [![iOS Build & Test](https://github.com/obadasemary/Rick-Morty/actions/workflows/CI.yml/badge.svg)](https://github.com/obadasemary/Rick-Morty/actions/workflows/CI.yml)
 [![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)](https://swift.org)
 [![iOS](https://img.shields.io/badge/iOS-17.6+-blue.svg)](https://developer.apple.com/ios/)
