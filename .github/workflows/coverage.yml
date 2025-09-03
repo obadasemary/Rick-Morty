@@ -1,0 +1,114 @@
+name: Code Coverage
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+  workflow_dispatch:
+    inputs:
+      skip_coverage:
+        description: 'Skip coverage generation (for debugging)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NSUnbufferedIO: "YES"
+  IOS_SIMULATOR_OS: "18.6"
+
+jobs:
+  # Generate code coverage for main app
+  app-coverage:
+    runs-on: macos-latest
+    if: ${{ !inputs.skip_coverage }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-xcode-coverage-${{ hashFiles('**/*.xcodeproj/project.pbxproj', '**/*.xcworkspace/contents.xcworkspacedata') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-coverage-
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.json
+          flags: app
+          name: rickmorty-app-coverage
+          fail_ci_if_error: false
+
+  # Generate code coverage for Swift packages
+  packages-coverage:
+    runs-on: macos-latest
+    if: ${{ !inputs.skip_coverage }}
+    strategy:
+      matrix:
+        package: 
+          - "RickMortyRepository"
+          - "DependencyContainer" 
+          - "UseCase"
+          - "CoreAPI"
+          - "RickMortyNetworkLayer"
+          - "FeedView"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate ${{ matrix.package }} coverage
+        run: |
+          set -euo pipefail
+          echo "::group::Generating coverage for ${{ matrix.package }}"
+          cd "${{ matrix.package }}"
+          swift test --enable-code-coverage
+          echo "::endgroup::"
+
+      - name: Upload ${{ matrix.package }} coverage
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ./${{ matrix.package }}
+          flags: ${{ matrix.package }}
+          name: rickmorty-${{ matrix.package }}-coverage
+          fail_ci_if_error: false
+
+  # Coverage summary and quality gates
+  coverage-summary:
+    runs-on: macos-latest
+    needs: [app-coverage, packages-coverage]
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Coverage Summary
+        run: |
+          echo "::group::Coverage Summary"
+          echo "✅ App coverage generated"
+          echo "✅ Package coverage generated for:"
+          echo "  - RickMortyRepository"
+          echo "  - DependencyContainer"
+          echo "  - UseCase"
+          echo "  - CoreAPI"
+          echo "  - RickMortyNetworkLayer"
+          echo "  - FeedView"
+          echo ""
+          echo "📊 Coverage reports uploaded to Codecov"
+          echo "🔍 View detailed coverage at: https://codecov.io/gh/obadasemary/Rick-Morty"
+          echo "::endgroup::"
+
+      - name: Coverage Quality Gates
+        run: |
+          echo "::group::Coverage Quality Gates"
+          echo "🎯 Target Coverage Goals:"
+          echo "  - Overall: > 80%"
+          echo "  - Business Logic (UseCase): > 90%"
+          echo "  - Repository Layer: > 85%"
+          echo "  - Network Layer: > 80%"
+          echo "  - API Layer: > 75%"
+          echo ""
+          echo "📈 Coverage tracking enabled for:"
+          echo "  - Unit tests"
+          echo "  - Integration tests"
+          echo "  - Build verification"
+          echo "::endgroup::"

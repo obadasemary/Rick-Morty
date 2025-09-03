@@ -1,0 +1,137 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+
+env:
+  NSUnbufferedIO: "YES"
+  IOS_SIMULATOR_OS: "18.6"
+
+jobs:
+  # Run tests before release
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-xcode-release-${{ hashFiles('**/*.xcodeproj/project.pbxproj', '**/*.xcworkspace/contents.xcworkspacedata') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-release-
+
+      - name: Test all packages
+        run: |
+          set -euo pipefail
+          echo "::group::Testing all packages"
+          for package in RickMortyRepository DependencyContainer UseCase CoreAPI RickMortyNetworkLayer; do
+            echo "Testing $package..."
+            cd "$package" && swift test && cd ..
+          done
+          echo "::endgroup::"
+
+      - name: Test main app
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -workspace "RickMorty.xcworkspace" \
+            -scheme "RickMorty" \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -skipMacroValidation \
+            test
+
+  # Build for release
+  build:
+    runs-on: macos-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-xcode-release-build-${{ hashFiles('**/*.xcodeproj/project.pbxproj', '**/*.xcworkspace/contents.xcworkspacedata') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-release-build-
+
+      - name: Build for release
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -workspace "RickMorty.xcworkspace" \
+            -scheme "RickMorty" \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -skipMacroValidation \
+            -configuration Release \
+            clean build
+
+  # Create release
+  release:
+    runs-on: macos-latest
+    needs: [test, build]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: RickMorty ${{ steps.version.outputs.version }}
+          body: |
+            ## RickMorty ${{ steps.version.outputs.version }}
+            
+            ### Features
+            - Clean Architecture implementation
+            - Swift Package Manager modules
+            - Comprehensive unit testing
+            - UI testing suite
+            - @Observable framework integration
+            - Cross-platform support (iOS 17+ / macOS 14+)
+            
+            ### Architecture
+            - **Repository Layer**: RickMortyRepository
+            - **Use Case Layer**: UseCase
+            - **Network Layer**: RickMortyNetworkLayer
+            - **API Layer**: CoreAPI
+            - **Dependency Injection**: DependencyContainer
+            
+            ### Testing
+            - Unit tests for all business logic
+            - Integration tests for package interactions
+            - UI tests for user interface
+            - Build verification for compilation
+            
+            ### Platform Support
+            - iOS 17.0+
+            - macOS 14.0+ (for @Observable framework)
+            
+            ### Swift Concurrency
+            - @MainActor isolation
+            - async/await patterns
+            - Sendable conformance
+          draft: false
+          prerelease: false
