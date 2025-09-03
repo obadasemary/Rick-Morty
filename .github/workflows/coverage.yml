@@ -59,7 +59,7 @@ jobs:
             # Find the binary - look for the actual test executable
             BINARY_FILE=$(find .build -path "*/debug/*PackageTests" -type f | head -1)
             
-            if [ -n "$BINARY_FILE" ] && [ -x "$BINARY_FILE" ]; then
+            if [ -n "$BINARY_FILE" ]; then
               echo "Found binary file: $BINARY_FILE"
               
               # Convert coverage data to lcov format
@@ -67,7 +67,7 @@ jobs:
               
               echo "✅ Coverage generated for ${{ matrix.package.name }}"
             else
-              echo "⚠️ Binary file not found or not executable for ${{ matrix.package.name }}"
+              echo "⚠️ Binary file not found for ${{ matrix.package.name }}"
               echo "Available files in .build:"
               find .build -type f | head -10
               touch coverage.lcov
