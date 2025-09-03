@@ -8,6 +8,7 @@
 import Foundation
 import Observation
 
+@available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
 @Observable
 @MainActor
 public final class DIContainer {
