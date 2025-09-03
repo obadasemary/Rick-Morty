@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 //
 //  CharacterTableViewCell.swift
 //  RickMortyUI
@@ -42,3 +43,8 @@ public class CharacterTableViewCell: UITableViewCell {
         hostingController = characterHostingController
     }
 }
+#else
+import Foundation
+/// Stub to allow SPM to build this target on non-UIKit platforms (e.g., macOS during dependency resolution).
+public class CharacterTableViewCell: NSObject {}
+#endif
