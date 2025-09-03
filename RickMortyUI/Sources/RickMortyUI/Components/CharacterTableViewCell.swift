@@ -5,10 +5,13 @@
 //  Created by Abdelrahman Mohamed on 01.09.2025.
 //
 
+#if os(iOS)
 import UIKit
+#endif
 import SwiftUI
 import UseCase
 
+#if os(iOS)
 public class CharacterTableViewCell: UITableViewCell {
     
     private var hostingController: UIHostingController<CharacterView>?
@@ -42,3 +45,4 @@ public class CharacterTableViewCell: UITableViewCell {
         hostingController = characterHostingController
     }
 }
+#endif
