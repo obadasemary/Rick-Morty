@@ -26,8 +26,8 @@ public struct CharacterDetailsView: View {
                         Color.gray.opacity(0.3)
                     }
                     .frame(
-                        width: UIScreen.main.bounds.width,
-                        height: UIScreen.main.bounds.width
+                        width: 400,
+                        height: 400
                     )
                     .clipped()
                     .cornerRadius(20)
@@ -46,14 +46,7 @@ public struct CharacterDetailsView: View {
                     )
                     .padding(.leading, 16)
                     .padding(.top, 16)
-                    .padding(
-                        .top,
-                        UIApplication
-                            .shared
-                            .connectedScenes
-                            .compactMap { ($0 as? UIWindowScene)?.keyWindow }
-                            .first?.safeAreaInsets.top ?? 0
-                    )
+                    .padding(.top, 20)
                     .shadow(radius: 3)
                 }
                 .frame(maxWidth: .infinity)
@@ -110,7 +103,7 @@ public struct CharacterDetailsView: View {
             }
         }
         .edgesIgnoringSafeArea(.top)
-        .background(Color(UIColor.systemBackground))
+        .background(Color(.systemBackground))
         .navigationBarBackButtonHidden(true) // 👈 Hides the default back arrow
         .navigationBarHidden(true)
     }
