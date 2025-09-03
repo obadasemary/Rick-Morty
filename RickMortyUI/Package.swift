@@ -7,6 +7,7 @@ let package = Package(
     name: "RickMortyUI",
     platforms: [
         .iOS(.v17),
+        .macOS(.v14),
         .macCatalyst(.v17)
     ],
     products: [
