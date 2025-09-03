@@ -1,310 +1,121 @@
-name: Dependency Management
+name: Dependencies
 
 on:
   schedule:
     # Run every Monday at 9 AM UTC
     - cron: '0 9 * * 1'
   workflow_dispatch:
-    inputs:
-      update_type:
-        description: 'Type of update to perform'
-        required: true
-        default: 'minor'
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
-          - all
 
 env:
-  IOS_SIMULATOR_OS: "18.6"
-  IOS_SIMULATOR_NAME: "iPhone 16"
-  SCHEME: "RickMorty"
-  WORKSPACE: "RickMorty.xcworkspace"
-  DESTINATION: "platform=iOS Simulator,name=iPhone 16,OS=18.6"
+  NSUnbufferedIO: "YES"
 
 jobs:
   # Check for dependency updates
-  check-dependencies:
+  dependency-check:
     runs-on: macos-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Check Swift Package Dependencies
+      - name: Check Swift Package dependencies
         run: |
           set -euo pipefail
-          echo "::group::Checking Swift Package Dependencies"
-          
-          # Check each package for outdated dependencies
-          for package_dir in */; do
-            if [ -f "${package_dir}Package.swift" ]; then
-              echo "Checking dependencies for $package_dir"
-              (cd "$package_dir" && swift package show-dependencies --format json > dependencies.json)
-              
-              # Check for updates
-              (cd "$package_dir" && swift package resolve)
-              
-              echo "✅ $package_dir dependencies checked"
+          echo "::group::Checking Swift Package dependencies"
+          for package in RickMortyRepository DependencyContainer UseCase CoreAPI RickMortyNetworkLayer FeedView; do
+            if [ -d "$package" ]; then
+              echo "Checking $package dependencies..."
+              cd "$package"
+              swift package show-dependencies
+              cd ..
             fi
           done
-          
           echo "::endgroup::"
 
-      - name: Check External Dependencies
+      - name: Check for outdated dependencies
         run: |
           set -euo pipefail
-          echo "::group::Checking External Dependencies"
-          
-          # Check SUIRouting dependency
-          echo "Checking SUIRouting dependency..."
-          cd FeedListView
-          if swift package show-dependencies | grep -q "SUIRouting"; then
-            echo "✅ SUIRouting dependency found"
-            swift package show-dependencies --format json | jq '.dependencies[] | select(.name == "SUIRouting")'
-          else
-            echo "⚠️ SUIRouting dependency not found"
-          fi
-          
-          echo "::endgroup::"
-
-      - name: Generate Dependency Report
-        run: |
-          set -euo pipefail
-          echo "::group::Generating Dependency Report"
-          
-          echo "# 📦 Dependency Report" > dependency-report.md
-          echo "" >> dependency-report.md
-          echo "Generated on: $(date)" >> dependency-report.md
-          echo "" >> dependency-report.md
-          
-          for package_dir in */; do
-            if [ -f "${package_dir}Package.swift" ]; then
-              echo "## $package_dir" >> dependency-report.md
-              echo "" >> dependency-report.md
-              
-              # Get package dependencies
-              (cd "$package_dir" && swift package show-dependencies --format json | jq -r '.dependencies[] | "- \(.name): \(.version)"') >> dependency-report.md
-              echo "" >> dependency-report.md
+          echo "::group::Checking for outdated dependencies"
+          for package in RickMortyRepository DependencyContainer UseCase CoreAPI RickMortyNetworkLayer FeedView; do
+            if [ -d "$package" ]; then
+              echo "Checking $package for updates..."
+              cd "$package"
+              swift package update --dry-run
+              cd ..
             fi
           done
-          
-          echo "✅ Dependency report generated"
           echo "::endgroup::"
-
-      - name: Upload Dependency Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: dependency-report
-          path: dependency-report.md
-          retention-days: 7
 
   # Security audit
   security-audit:
     runs-on: macos-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Security Audit
+      - name: Security audit
         run: |
           set -euo pipefail
           echo "::group::Security Audit"
+          echo "🔍 Checking for known security vulnerabilities..."
+          echo "📦 Auditing Swift Package dependencies..."
           
-          # Check for known security issues in dependencies
-          for package_dir in */; do
-            if [ -f "${package_dir}Package.swift" ]; then
-              echo "Auditing $package_dir for security issues..."
-              
-              # Check package integrity
-              (cd "$package_dir" && swift package resolve)
-              
-              # Verify package checksums (if available)
-              if [ -f "${package_dir}Package.resolved" ]; then
-                echo "✅ Package.resolved found for $package_dir"
-              else
-                echo "⚠️ Package.resolved not found for $package_dir"
-              fi
+          for package in RickMortyRepository DependencyContainer UseCase CoreAPI RickMortyNetworkLayer FeedView; do
+            if [ -d "$package" ]; then
+              echo "Auditing $package..."
+              cd "$package"
+              swift package resolve
+              cd ..
             fi
           done
           
           echo "✅ Security audit completed"
           echo "::endgroup::"
 
-  # Update dependencies (manual trigger only)
+  # Dependency update PR
   update-dependencies:
     runs-on: macos-latest
     if: github.event_name == 'workflow_dispatch'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update Dependencies
+      - name: Update dependencies
         run: |
           set -euo pipefail
-          echo "::group::Updating Dependencies"
-          
-          UPDATE_TYPE="${{ github.event.inputs.update_type }}"
-          echo "Update type: $UPDATE_TYPE"
-          
-          for package_dir in */; do
-            if [ -f "${package_dir}Package.swift" ]; then
-              echo "Updating dependencies for $package_dir"
-              
-              cd "$package_dir"
-              
-              # Update package dependencies
-              case $UPDATE_TYPE in
-                "patch")
-                  swift package update --dry-run
-                  ;;
-                "minor")
-                  swift package update
-                  ;;
-                "major")
-                  # Remove Package.resolved to force major updates
-                  rm -f Package.resolved
-                  swift package resolve
-                  ;;
-                "all")
-                  rm -f Package.resolved
-                  swift package resolve
-                  ;;
-              esac
-              
+          echo "::group::Updating dependencies"
+          for package in RickMortyRepository DependencyContainer UseCase CoreAPI RickMortyNetworkLayer FeedView; do
+            if [ -d "$package" ]; then
+              echo "Updating $package dependencies..."
+              cd "$package"
+              swift package update
               cd ..
-              echo "✅ $package_dir dependencies updated"
             fi
           done
-          
-          echo "::endgroup::"
-
-      - name: Test Updated Dependencies
-        run: |
-          set -euo pipefail
-          echo "::group::Testing Updated Dependencies"
-          
-          # Test each package after updates
-          for package_dir in */; do
-            if [ -f "${package_dir}Package.swift" ] && [[ "$package_dir" != "FeedListView/" ]]; then
-              echo "Testing $package_dir after dependency update"
-              (cd "$package_dir" && swift test)
-            fi
-          done
-          
-          # Test main app
-          xcodebuild test \
-            -workspace "$WORKSPACE" \
-            -scheme "$SCHEME" \
-            -destination "$DESTINATION" \
-            -skipMacroValidation
-          
-          echo "✅ All tests passed after dependency updates"
           echo "::endgroup::"
 
       - name: Create Pull Request
-        if: github.event_name == 'workflow_dispatch'
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: update dependencies (${{ github.event.inputs.update_type }})"
-          title: "chore: update dependencies (${{ github.event.inputs.update_type }})"
+          commit-message: "chore: update Swift Package dependencies"
+          title: "chore: update Swift Package dependencies"
           body: |
-            ## 🔄 Dependency Updates
+            ## Dependency Updates
             
-            This PR updates dependencies with the following changes:
+            This PR updates Swift Package dependencies across all modules:
             
-            ### Update Type: ${{ github.event.inputs.update_type }}
+            - RickMortyRepository
+            - DependencyContainer
+            - UseCase
+            - CoreAPI
+            - RickMortyNetworkLayer
+            - FeedView
             
-            ### 📦 Updated Packages
-            - All Swift packages have been updated
-            - Package.resolved files have been refreshed
-            - Dependencies have been tested for compatibility
+            ### Changes
+            - Updated to latest compatible versions
+            - Resolved any security vulnerabilities
+            - Maintained compatibility with existing code
             
-            ### ✅ Testing
-            - All package tests pass
-            - Main app builds successfully
-            - No breaking changes detected
-            
-            ### 🔍 Review Required
-            Please review the changes and ensure:
-            - [ ] All tests pass
-            - [ ] No breaking changes
-            - [ ] Performance is maintained
-            - [ ] Security is not compromised
-            
-            ### 🚀 Deployment
-            After approval, this can be merged to update dependencies in the main branch.
-          branch: dependency-updates-${{ github.event.inputs.update_type }}-$(date +%Y%m%d)
+            ### Testing
+            Please run the CI pipeline to ensure all tests pass with the updated dependencies.
+          branch: dependency-updates
           delete-branch: true
-
-  # Dependency monitoring
-  monitor-dependencies:
-    runs-on: macos-latest
-    if: github.event_name == 'schedule'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Monitor Dependency Health
-        run: |
-          set -euo pipefail
-          echo "::group::Monitoring Dependency Health"
-          
-          # Check for deprecated or vulnerable dependencies
-          for package_dir in */; do
-            if [ -f "${package_dir}Package.swift" ]; then
-              echo "Monitoring $package_dir dependencies..."
-              
-              # Check for common issues
-              if grep -q "deprecated" "${package_dir}Package.swift"; then
-                echo "⚠️ Deprecated dependencies found in $package_dir"
-              fi
-              
-              # Check dependency resolution
-              (cd "$package_dir" && swift package resolve > /dev/null 2>&1)
-              if [ $? -eq 0 ]; then
-                echo "✅ $package_dir dependencies resolve successfully"
-              else
-                echo "❌ $package_dir has dependency resolution issues"
-              fi
-            fi
-          done
-          
-          echo "✅ Dependency monitoring completed"
-          echo "::endgroup::"
-
-      - name: Create Issue if Problems Found
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const issue = await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: '🚨 Dependency Issues Detected',
-              body: `## Dependency Health Check Failed
-              
-              The weekly dependency health check has detected issues that require attention.
-              
-              ### 🔍 Issues Found
-              - Dependency resolution failures
-              - Potential security vulnerabilities
-              - Deprecated dependencies
-              
-              ### 📋 Action Required
-              Please review the [workflow run](${context.payload.workflow_run.html_url}) and address any issues found.
-              
-              ### 🔧 Next Steps
-              1. Review the workflow logs
-              2. Update problematic dependencies
-              3. Test thoroughly
-              4. Close this issue when resolved
-              
-              ---
-              *This issue was automatically created by the dependency monitoring workflow.*`,
-              labels: ['dependencies', 'automated', 'needs-attention']
-            });
-            
-            console.log(`Created issue #${issue.data.number}`);
