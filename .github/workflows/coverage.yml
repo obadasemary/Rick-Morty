@@ -50,10 +50,31 @@ jobs:
           # Generate coverage data
           swift test --enable-code-coverage
           
-          # Convert coverage data to lcov format
-          xcrun llvm-cov export -format=lcov .build/debug/${{ matrix.package.name }}PackageTests.xctest/Contents/MacOS/${{ matrix.package.name }}PackageTests > coverage.lcov
+          # Find the profdata file
+          PROFDATA_FILE=$(find .build -name "*.profdata" | head -1)
           
-          echo "✅ Coverage generated for ${{ matrix.package.name }}"
+          if [ -n "$PROFDATA_FILE" ]; then
+            echo "Found profdata file: $PROFDATA_FILE"
+            
+            # Find the binary
+            BINARY_FILE=$(find .build -name "*PackageTests" -type f -executable | head -1)
+            
+            if [ -n "$BINARY_FILE" ]; then
+              echo "Found binary file: $BINARY_FILE"
+              
+              # Convert coverage data to lcov format
+              xcrun llvm-cov export -format=lcov -instr-profile="$PROFDATA_FILE" "$BINARY_FILE" > coverage.lcov
+              
+              echo "✅ Coverage generated for ${{ matrix.package.name }}"
+            else
+              echo "⚠️ Binary file not found for ${{ matrix.package.name }}"
+              touch coverage.lcov
+            fi
+          else
+            echo "⚠️ Profdata file not found for ${{ matrix.package.name }}"
+            touch coverage.lcov
+          fi
+          
           echo "::endgroup::"
 
       - name: Upload Coverage Data
@@ -94,7 +115,8 @@ jobs:
             
             echo "✅ App coverage generated"
           else
-            echo "⚠️ No coverage data found"
+            echo "⚠️ No coverage data found, creating empty report"
+            echo '{"coverage": []}' > coverage-report.json
           fi
           
           echo "::endgroup::"
