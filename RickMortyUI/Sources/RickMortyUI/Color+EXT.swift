@@ -5,6 +5,9 @@
 //  Created by Abdelrahman Mohamed on 31.08.2025.
 //
 
+#if canImport(UIKit)
+import UIKit
+
 import SwiftUI
 
 public extension Color {
@@ -53,3 +56,24 @@ public extension Color {
         }
     }
 }
+
+#else
+import AppKit
+
+public extension Color {
+    static var lightBlue: Color {
+        // macOS fallback (no traitCollection)
+        Color(NSColor(calibratedRed: 0.75, green: 0.85, blue: 1.0, alpha: 1))
+    }
+    
+    static var lightRed: Color {
+        Color(NSColor(calibratedRed: 1.0, green: 0.90, blue: 0.90, alpha: 1))
+    }
+    
+    enum StatusColor {
+        public static let alive = Color.lightBlue
+        public static let dead = Color.lightRed
+        public static let unknown = Color(NSColor.windowBackgroundColor)
+    }
+}
+#endif
