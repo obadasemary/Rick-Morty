@@ -104,8 +104,10 @@ public struct CharacterDetailsView: View {
         }
         .edgesIgnoringSafeArea(.top)
         .background(Color.primary.colorInvert())
+        #if os(iOS)
         .navigationBarBackButtonHidden(true) // 👈 Hides the default back arrow
         .navigationBarHidden(true)
+        #endif
     }
     
     private func statusText(_ status: UseCase.Status) -> String {
