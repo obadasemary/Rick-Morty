@@ -58,6 +58,7 @@ public extension Color {
 }
 
 #else
+import SwiftUI
 import AppKit
 
 public extension Color {
