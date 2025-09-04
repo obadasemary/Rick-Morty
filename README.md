@@ -95,7 +95,7 @@ The project is organized into multiple Swift packages, each with a specific resp
 
 - Xcode 15.0+
 - iOS 17.0+
-- Swift 5.9+
+- Swift 6.0+
 
 ## 🏃‍♂️ Getting Started
 
