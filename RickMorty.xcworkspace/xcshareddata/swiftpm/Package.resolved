@@ -1,15 +1,14 @@
 {
-  "originHash" : "94610af8b04a9b9a5bc99898fcd31e6606c7d3fd8bdbefa768bb09815dc6ccea",
   "pins" : [
     {
       "identity" : "suirouting",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/obadasemary/SUIRouting.git",
       "state" : {
-        "revision" : "d9ca0e7fad40aa875ec72104a4af80f3655dfe9d",
-        "version" : "1.0.6"
+        "branch" : "Swift-V5.9",
+        "revision" : "9a0d053f65262aceaa2f289973e3cefc15405350"
       }
     }
   ],
-  "version" : 3
+  "version" : 2
 }

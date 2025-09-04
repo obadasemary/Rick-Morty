@@ -7,10 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AF0906A82E63A12700156C00 /* SUIRouting in Frameworks */ = {isa = PBXBuildFile; productRef = AF0906A72E63A12700156C00 /* SUIRouting */; };
 		AF3E26652E63B5CB00B918F1 /* RickMortyUI in Frameworks */ = {isa = PBXBuildFile; productRef = AF3E26642E63B5CB00B918F1 /* RickMortyUI */; };
 		AF7BB0E72E6601EE00714D7B /* FeedListView in Frameworks */ = {isa = PBXBuildFile; productRef = AF7BB0E62E6601EE00714D7B /* FeedListView */; };
 		AF7BB0E92E6602E100714D7B /* TabBarView in Frameworks */ = {isa = PBXBuildFile; productRef = AF7BB0E82E6602E100714D7B /* TabBarView */; };
+		AFBA67E12E6A355A00CB8E94 /* SUIRouting in Frameworks */ = {isa = PBXBuildFile; productRef = AFBA67E02E6A355A00CB8E94 /* SUIRouting */; };
 		AFC577082E6095CE00B3C3F0 /* CoreAPI in Frameworks */ = {isa = PBXBuildFile; productRef = AFC577072E6095CE00B3C3F0 /* CoreAPI */; };
 		AFC5770A2E6095CE00B3C3F0 /* DependencyContainer in Frameworks */ = {isa = PBXBuildFile; productRef = AFC577092E6095CE00B3C3F0 /* DependencyContainer */; };
 		AFC5770C2E6095CE00B3C3F0 /* RickMortyNetworkLayer in Frameworks */ = {isa = PBXBuildFile; productRef = AFC5770B2E6095CE00B3C3F0 /* RickMortyNetworkLayer */; };
@@ -74,7 +74,7 @@
 				AFC579882E612AE800B3C3F0 /* CharacterDetailsView in Frameworks */,
 				AF7BB0E92E6602E100714D7B /* TabBarView in Frameworks */,
 				AFC5770C2E6095CE00B3C3F0 /* RickMortyNetworkLayer in Frameworks */,
-				AF0906A82E63A12700156C00 /* SUIRouting in Frameworks */,
+				AFBA67E12E6A355A00CB8E94 /* SUIRouting in Frameworks */,
 				AFC5770A2E6095CE00B3C3F0 /* DependencyContainer in Frameworks */,
 				AFC579862E611CF500B3C3F0 /* DevPreview in Frameworks */,
 				AFC5770E2E6095CE00B3C3F0 /* RickMortyRepository in Frameworks */,
@@ -155,10 +155,10 @@
 				AFC579832E611B6200B3C3F0 /* FeedView */,
 				AFC579852E611CF500B3C3F0 /* DevPreview */,
 				AFC579872E612AE800B3C3F0 /* CharacterDetailsView */,
-				AF0906A72E63A12700156C00 /* SUIRouting */,
 				AF3E26642E63B5CB00B918F1 /* RickMortyUI */,
 				AF7BB0E62E6601EE00714D7B /* FeedListView */,
 				AF7BB0E82E6602E100714D7B /* TabBarView */,
+				AFBA67E02E6A355A00CB8E94 /* SUIRouting */,
 			);
 			productName = RickMorty;
 			productReference = AFC576022E5F64BD00B3C3F0 /* RickMorty.app */;
@@ -243,7 +243,7 @@
 			mainGroup = AFC575F92E5F64BD00B3C3F0;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				AF0906A62E63A12700156C00 /* XCRemoteSwiftPackageReference "SUIRouting" */,
+				AFBA67DF2E6A34D400CB8E94 /* XCRemoteSwiftPackageReference "SUIRouting" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AFC576032E5F64BD00B3C3F0 /* Products */;
@@ -614,22 +614,17 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		AF0906A62E63A12700156C00 /* XCRemoteSwiftPackageReference "SUIRouting" */ = {
+		AFBA67DF2E6A34D400CB8E94 /* XCRemoteSwiftPackageReference "SUIRouting" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/obadasemary/SUIRouting.git";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.6;
+				branch = "Swift-V5.9";
+				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		AF0906A72E63A12700156C00 /* SUIRouting */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = AF0906A62E63A12700156C00 /* XCRemoteSwiftPackageReference "SUIRouting" */;
-			productName = SUIRouting;
-		};
 		AF3E26642E63B5CB00B918F1 /* RickMortyUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RickMortyUI;
@@ -641,6 +636,11 @@
 		AF7BB0E82E6602E100714D7B /* TabBarView */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TabBarView;
+		};
+		AFBA67E02E6A355A00CB8E94 /* SUIRouting */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AFBA67DF2E6A34D400CB8E94 /* XCRemoteSwiftPackageReference "SUIRouting" */;
+			productName = SUIRouting;
 		};
 		AFC577072E6095CE00B3C3F0 /* CoreAPI */ = {
 			isa = XCSwiftPackageProductDependency;
