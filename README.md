@@ -99,7 +99,7 @@ The project is organized into multiple Swift packages, each with a specific resp
 
 For Swift 5.9 with Xcode 16.0 + Use
 ```bash
-git clone https://github.com/obadasemary/Rick-Morty/tree/SupportSwiftV5.9
+git clone -b SupportSwiftV5.9 --single-branch https://github.com/obadasemary/Rick-Morty.git
 ```
 
 ## 🏃‍♂️ Getting Started
