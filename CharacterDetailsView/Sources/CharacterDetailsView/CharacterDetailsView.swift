@@ -32,29 +32,33 @@ public struct CharacterDetailsView: View {
                     .clipped()
                     .cornerRadius(20)
                     
-                    Button(
-                        action: {
-                            viewModel.back()
-                        },
-                        label: {
-                            Image(systemName: "arrow.left")
-                                .foregroundColor(.black)
-                                .frame(width: 40, height: 40)
-                                .background(Color.white.opacity(0.8))
-                                .clipShape(Circle())
-                        }
-                    )
-                    .padding(.leading, 16)
-                    .padding(.top, 16)
-                    .padding(
-                        .top,
-                        UIApplication
-                            .shared
-                            .connectedScenes
-                            .compactMap { ($0 as? UIWindowScene)?.keyWindow }
-                            .first?.safeAreaInsets.top ?? 0
-                    )
-                    .shadow(radius: 3)
+                    if #available(iOS 26.0, *) {
+                        
+                    } else {
+                        Button(
+                            action: {
+                                viewModel.back()
+                            },
+                            label: {
+                                Image(systemName: "chevron.left.circle.fill")
+                                    .font(.system(size: 30))
+                                    .foregroundStyle(Color.primary, .background)
+                                    .shadow(radius: 2)
+                                    .frame(height: 35)
+                            }
+                        )
+                        .padding(.leading, 16)
+                        .padding(.top, 16)
+                        .padding(
+                            .top,
+                            UIApplication
+                                .shared
+                                .connectedScenes
+                                .compactMap { ($0 as? UIWindowScene)?.keyWindow }
+                                .first?.safeAreaInsets.top ?? 0
+                        )
+                        .shadow(radius: 3)
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 
@@ -111,8 +115,8 @@ public struct CharacterDetailsView: View {
         }
         .edgesIgnoringSafeArea(.top)
         .background(Color(UIColor.systemBackground))
-        .navigationBarBackButtonHidden(true) // 👈 Hides the default back arrow
-        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(shouldHideBackButton) // 👈 Hides the default back arrow
+        .navigationBarHidden(shouldHideBackButton)
     }
     
     private func statusText(_ status: UseCase.Status) -> String {
@@ -134,6 +138,14 @@ public struct CharacterDetailsView: View {
             Color.CaracterDetails.Status.Background.dead
         case .unknown:
             Color.CaracterDetails.Status.Background.unknown
+        }
+    }
+    
+    private var shouldHideBackButton: Bool {
+        if #available(iOS 26.0, *) {
+            return false
+        } else {
+            return true
         }
     }
 }
