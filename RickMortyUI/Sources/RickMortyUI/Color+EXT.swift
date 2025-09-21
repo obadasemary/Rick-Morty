@@ -29,7 +29,7 @@ public extension Color {
 
 
 public extension Color {
-    enum CaracterCard {
+    enum CharacterCard {
         public enum Status {
             public static let alive = Color.lightBlue
             public static let dead = Color.lightRed
@@ -43,7 +43,7 @@ public extension Color {
         }
     }
     
-    enum CaracterDetails {
+    enum CharacterDetails {
         public enum Status {
             public enum Background {
                 public static let alive = Color.lightBlue
