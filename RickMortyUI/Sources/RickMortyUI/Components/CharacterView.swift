@@ -73,22 +73,22 @@ public struct CharacterView: View {
     private var backgroundColor: Color {
         switch character.status {
         case .alive:
-            Color.CaracterCard.Status.alive
+            Color.CharacterCard.Status.alive
         case .dead:
-            Color.CaracterCard.Status.dead
+            Color.CharacterCard.Status.dead
         case .unknown:
-            Color.CaracterCard.Status.unknown
+            Color.CharacterCard.Status.unknown
         }
     }
     
     private var borderColor: Color {
         switch character.status {
         case .alive:
-            Color.CaracterCard.Border.alive
+            Color.CharacterCard.Border.alive
         case .dead:
-            Color.CaracterCard.Border.dead
+            Color.CharacterCard.Border.dead
         case .unknown:
-            Color.CaracterCard.Border.unknown
+            Color.CharacterCard.Border.unknown
         }
     }
     

@@ -15,7 +15,6 @@ public struct TabBarView: View {
     
     @Environment(FeedBuilder.self) private var feedBuilder
     @Environment(FeedListBuilder.self) private var feedListBuilder
-    @Environment(CharacterDetailsBuilder.self) private var characterDetailsBuilder
     
     public init() {}
     

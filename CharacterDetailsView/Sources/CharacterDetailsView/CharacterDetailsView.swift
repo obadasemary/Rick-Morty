@@ -86,7 +86,7 @@ public struct CharacterDetailsView: View {
                             .foregroundColor(.secondary)
                         Text(" · ")
                             .fontWeight(.bold)
-                            .foregroundColor(.black)
+                            .foregroundColor(.secondary)
                         Text(viewModel.character.gender.rawValue.capitalized)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
@@ -100,7 +100,7 @@ public struct CharacterDetailsView: View {
                     HStack {
                         Text("Location :")
                             .fontWeight(.bold)
-                            .foregroundColor(.black)
+                            .foregroundColor(.secondary)
                         Text(location.capitalized)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
@@ -133,11 +133,11 @@ public struct CharacterDetailsView: View {
     private func statusColor(_ status: UseCase.Status) -> Color {
         switch status {
         case .alive:
-            Color.CaracterDetails.Status.Background.alive
+            Color.CharacterDetails.Status.Background.alive
         case .dead:
-            Color.CaracterDetails.Status.Background.dead
+            Color.CharacterDetails.Status.Background.dead
         case .unknown:
-            Color.CaracterDetails.Status.Background.unknown
+            Color.CharacterDetails.Status.Background.unknown
         }
     }
     
