@@ -29,4 +29,23 @@ public final class DIContainer {
         let serviceName = String(describing: service)
         return services[serviceName] as? T
     }
+    
+    // Safe resolve with default value
+    public func resolve<T>(_ service: T.Type, default defaultValue: T) -> T {
+        let serviceName = String(describing: service)
+        return services[serviceName] as? T ?? defaultValue
+    }
+    
+    // Safe resolve that throws an error instead of returning nil
+    public func requireResolve<T>(_ service: T.Type) throws -> T {
+        let serviceName = String(describing: service)
+        guard let service = services[serviceName] as? T else {
+            throw DIError.serviceNotRegistered(serviceName)
+        }
+        return service
+    }
+}
+
+public enum DIError: Error {
+    case serviceNotRegistered(String)
 }
