@@ -20,7 +20,11 @@ public final class FeedUseCase {
     private let feedRepositoryProtocol: FeedRepositoryProtocol
     
     public init(container: DIContainer) {
-        self.feedRepositoryProtocol = container.resolve(FeedRepositoryProtocol.self)!
+        do {
+            self.feedRepositoryProtocol = try container.requireResolve(FeedRepositoryProtocol.self)
+        } catch {
+            fatalError("Failed to resolve FeedRepositoryProtocol: \(error)")
+        }
     }
 }
 
