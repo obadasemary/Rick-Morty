@@ -243,4 +243,4 @@ For support, email [obada.semary@gmail.com] or create an issue in the repository
 
 ---
 
-**Built with ❤️ using SwiftUI and Clean Architecture**
+**Built with ❤️ using SwiftUI, Multi Modular Architecture and Clean Architecture**
