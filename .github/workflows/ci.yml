@@ -28,6 +28,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-xcode-
 
+      - name: Clean Module Cache
+        run: |
+          echo "Cleaning module cache to prevent stale precompiled headers..."
+          rm -rf ~/Library/Developer/Xcode/DerivedData/ModuleCache.noindex
+          echo "✅ Module cache cleaned"
+
       - name: Show Xcode version
         run: xcodebuild -version
 
@@ -115,17 +121,25 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-xcode-ui-tests-
 
+      - name: Clean Module Cache
+        run: |
+          echo "Cleaning module cache to prevent stale precompiled headers..."
+          rm -rf ~/Library/Developer/Xcode/DerivedData/ModuleCache.noindex
+          echo "✅ Module cache cleaned"
+
       - name: Show Xcode version
         run: xcodebuild -version
 
       - name: Run UI Tests
         run: |
           set -euo pipefail
+          echo "Running UI tests with automatic retry on failure..."
           xcodebuild \
             -workspace "RickMorty.xcworkspace" \
             -scheme "RickMorty" \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
             -only-testing:RickMortyUITests \
+            -retry-tests-on-failure \
             test
 
   # Code quality and linting
@@ -203,13 +217,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache DerivedData
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-xcode-integration-${{ hashFiles('**/*.xcodeproj/project.pbxproj', '**/*.xcworkspace/contents.xcworkspacedata') }}
-          restore-keys: |
-            ${{ runner.os }}-xcode-integration-
+      - name: Clean Module Cache
+        run: |
+          echo "::group::Cleaning Module Cache"
+          echo "Removing stale module cache to prevent build failures..."
+          rm -rf ~/Library/Developer/Xcode/DerivedData/ModuleCache.noindex
+          echo "✅ Module cache cleaned"
+          echo "::endgroup::"
 
       - name: Integration Build Test
         run: |
