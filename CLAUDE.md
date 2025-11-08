@@ -27,10 +27,10 @@ xcodebuild -workspace RickMorty.xcworkspace -scheme UseCase build
 # Run all tests from command line
 xcodebuild test -workspace RickMorty.xcworkspace -scheme RickMorty -destination 'platform=iOS Simulator,name=iPhone 15'
 
-# Run tests for a specific package (navigate to package directory first)
-cd UseCase && swift test
-cd FeedView && swift test
-cd RickMortyNetworkLayer && swift test
+# Run tests for a specific package from the workspace root
+xcodebuild test -workspace RickMorty.xcworkspace -scheme UseCase -destination 'platform=iOS Simulator,name=iPhone 15'
+xcodebuild test -workspace RickMorty.xcworkspace -scheme FeedView -destination 'platform=iOS Simulator,name=iPhone 15'
+xcodebuild test -workspace RickMorty.xcworkspace -scheme RickMortyNetworkLayer -destination 'platform=iOS Simulator,name=iPhone 15'
 
 # Run tests from Xcode: Cmd + U
 ```
@@ -45,13 +45,13 @@ cd RickMortyNetworkLayer && swift test
 
 The app follows **Clean Architecture** with strict layer separation. Data flows **unidirectionally** from outer layers (UI) through use cases to the data layer.
 
-### Layer Dependencies (Inner → Outer)
+### Layer Dependencies (Dependency Direction: Outer → Inner)
 ```
-Data Layer (RickMortyNetworkLayer, CoreAPI, RickMortyRepository)
+Presentation Layer (FeedView, CharacterDetailsView, TabBarView)
     ↓
 Business Logic Layer (UseCase)
     ↓
-Presentation Layer (FeedView, CharacterDetailsView, FeedListView, TabBarView)
+Data Layer (RickMortyNetworkLayer, CoreAPI, RickMortyRepository)
 ```
 
 ### Key Architecture Principles
@@ -84,7 +84,6 @@ Presentation Layer (FeedView, CharacterDetailsView, FeedListView, TabBarView)
 ### Presentation Features
 - **FeedView**: SwiftUI character list with infinite scroll pagination and status filtering. Uses `FeedViewModel` with state machine pattern (idle, loading, loaded, error, loadingMore).
 - **CharacterDetailsView**: Character detail screen
-- **FeedListView**: Hybrid SwiftUI + UIKit implementation (UIViewController with SwiftUI integration)
 - **TabBarView**: Main tab-based navigation using SUIRouting library
 - **RickMortyUI**: Shared UI components (`CharacterView`, `ErrorView`, `FiltersView`, `CharacterTableViewCell`)
 
@@ -131,8 +130,11 @@ enum State {
 The app uses the SUIRouting library (external dependency) for declarative routing. Routers conform to protocols and use the `Router` object to push/present views.
 
 ### Error Mapping
-Errors from the network layer are mapped through adapters:
-- `NetworkError` → `FeedError` (network, server, decoding, invalidResponse, unknown)
+ViewModels map generic errors to domain-specific error types using type casting:
+- `URLError` → `FeedError.network` (network connectivity issues)
+- `DecodingError` → `FeedError.decoding` (JSON parsing failures)
+- NSError with HTTPStatusCode → `FeedError.server(status:)` (HTTP errors)
+- Other errors → `FeedError.unknown(message:)` (unclassified errors)
 - ViewModels provide user-friendly error messages via computed properties
 
 ## Common Development Tasks
