@@ -18,7 +18,7 @@ public struct CharacterDetailsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 ZStack(alignment: .topLeading) {
-                    AsyncImage(url: viewModel.character.image) { image in
+                    CachedAsyncImage(url: viewModel.character.image) { image in
                         image
                             .resizable()
                             .scaledToFill()
