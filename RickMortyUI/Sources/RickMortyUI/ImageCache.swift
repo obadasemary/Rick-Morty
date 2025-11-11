@@ -16,23 +16,29 @@ public final class ImageCache {
     public static let shared = ImageCache()
 
     private let cache = NSCache<NSString, UIImage>()
+    nonisolated(unsafe) private var memoryWarningObserver: NSObjectProtocol?
 
     private init() {
         // Configure cache limits
         cache.countLimit = 100 // Maximum 100 images
         cache.totalCostLimit = 1024 * 1024 * 100 // 100 MB
 
-        // Clear cache on memory warning
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(clearCache),
-            name: UIApplication.didReceiveMemoryWarningNotification,
-            object: nil
-        )
+        // Clear cache on memory warning using block-based observer for MainActor compatibility
+        memoryWarningObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.clearCache()
+            }
+        }
     }
 
     deinit {
-        NotificationCenter.default.removeObserver(self)
+        if let observer = memoryWarningObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     /// Retrieves an image from cache
@@ -52,7 +58,7 @@ public final class ImageCache {
     }
 
     /// Clears all cached images
-    @objc public func clearCache() {
+    public func clearCache() {
         cache.removeAllObjects()
     }
 
