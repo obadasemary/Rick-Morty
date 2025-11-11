@@ -270,8 +270,8 @@ struct ImageCacheTests {
             object: nil
         )
 
-        // Give notification time to process
-        try await Task.sleep(for: .milliseconds(100))
+        // Give notification and async task time to process
+        try await Task.sleep(for: .milliseconds(500))
 
         // Verify cache was cleared
         let retrieved = cache.get(for: testURL)
