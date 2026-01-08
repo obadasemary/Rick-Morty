@@ -8,10 +8,9 @@ on:
 
 env:
   NSUnbufferedIO: "YES"
-  IOS_SIMULATOR_OS: "18.6"
 
 jobs:
-  # Main app build and test
+  # Main app build and test (unit tests only)
   xcode-build-test:
     runs-on: macos-latest
     env:
@@ -40,14 +39,15 @@ jobs:
       - name: Build & Test (iOS Simulator)
         run: |
           set -euo pipefail
-          echo "::group::Building and testing main app"
+          echo "::group::Building and testing main app (unit tests only)"
           xcodebuild \
             -workspace "RickMorty.xcworkspace" \
             -scheme "RickMorty" \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
             -skipMacroValidation \
+            -only-testing:RickMortyTests \
             clean build test
-          echo "✅ Main app build and test completed successfully"
+          echo "✅ Main app build and unit tests completed successfully"
           echo "::endgroup::"
 
   # Swift Package Manager tests for individual packages
@@ -110,6 +110,7 @@ jobs:
   # UI Tests
   ui-tests:
     runs-on: macos-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -133,13 +134,15 @@ jobs:
       - name: Run UI Tests
         run: |
           set -euo pipefail
-          echo "Running UI tests with automatic retry on failure..."
+          echo "Running UI tests with retry logic and timeout..."
           xcodebuild \
             -workspace "RickMorty.xcworkspace" \
             -scheme "RickMorty" \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+            -skipMacroValidation \
             -only-testing:RickMortyUITests \
             -retry-tests-on-failure \
+            -maximum-test-repetitions 3 \
             test
 
   # Code quality and linting
@@ -233,7 +236,7 @@ jobs:
           xcodebuild \
             -workspace "RickMorty.xcworkspace" \
             -scheme "RickMorty" \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
             -skipMacroValidation \
             clean build
           echo "✅ Integration build completed successfully"
