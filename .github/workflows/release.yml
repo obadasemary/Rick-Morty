@@ -13,7 +13,6 @@ on:
 
 env:
   NSUnbufferedIO: "YES"
-  IOS_SIMULATOR_OS: "18.6"
 
 jobs:
   # Run tests before release
