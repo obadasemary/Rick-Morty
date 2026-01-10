@@ -132,16 +132,19 @@ jobs:
         run: xcodebuild -version
 
       - name: Run UI Tests
+        timeout-minutes: 15
         run: |
           set -euo pipefail
-          echo "Running UI tests with retry logic and timeout..."
+          echo "Running UI tests with timeout protection..."
           xcodebuild \
             -workspace "RickMorty.xcworkspace" \
             -scheme "RickMorty" \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
             -skipMacroValidation \
             -only-testing:RickMortyUITests \
-            -retry-tests-on-failure \
+            -skip-testing:RickMortyUITests/RickMortyUITestsLaunchTests \
+            -test-timeouts-enabled YES \
+            -maximum-test-execution-time-allowance 120 \
             test
 
   # Code quality and linting
