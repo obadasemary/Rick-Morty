@@ -13,8 +13,12 @@ final class RickMortyUITests: XCTestCase {
     
     private enum AccessibilityId {
         static let charactersScrollView = "charactersScrollView"
+        static let charactersTableView = "charactersTableView"
         static let characterCard = "characterCard"
         static let characterDetailsBackButton = "characterDetailsBackButton"
+        static let filterAlive = "filterAlive"
+        static let filterDead = "filterDead"
+        static let filterUnknown = "filterUnknown"
     }
 
     override func setUpWithError() throws {
@@ -42,6 +46,10 @@ final class RickMortyUITests: XCTestCase {
         return true
     }
 
+    private func element(with identifier: String) -> XCUIElement {
+        app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+    }
+
     /// Waits for network-loaded content by checking for scroll view children
     private func waitForContentToLoad(timeout: TimeInterval = 10) -> Bool {
         let scrollView = app.scrollViews[AccessibilityId.charactersScrollView]
@@ -67,6 +75,33 @@ final class RickMortyUITests: XCTestCase {
 
         guard firstCard.waitForExistence(timeout: timeout) else { return false }
         firstCard.tap()
+        return true
+    }
+
+    private func waitForUIKitContentToLoad(timeout: TimeInterval = 12) -> Bool {
+        let table = app.tables[AccessibilityId.charactersTableView]
+        if table.waitForExistence(timeout: timeout) {
+            let firstCard = table
+                .descendants(matching: .any)
+                .matching(identifier: AccessibilityId.characterCard)
+                .firstMatch
+            return firstCard.waitForExistence(timeout: timeout)
+        }
+
+        let collection = app.collectionViews.firstMatch
+        guard collection.waitForExistence(timeout: timeout) else { return false }
+        let firstCard = collection
+            .descendants(matching: .any)
+            .matching(identifier: AccessibilityId.characterCard)
+            .firstMatch
+        return firstCard.waitForExistence(timeout: timeout)
+    }
+
+    @discardableResult
+    private func tapFilterIfExists(_ identifier: String, timeout: TimeInterval = 5) -> Bool {
+        let filter = element(with: identifier)
+        guard filter.waitForExistence(timeout: timeout) else { return false }
+        filter.tap()
         return true
     }
     
@@ -233,42 +268,27 @@ final class RickMortyUITests: XCTestCase {
         uiKitTab.tap()
         XCTAssertTrue(uiKitTab.isSelected, "UIKit tab should be selected")
 
-        // Wait for UIKit tab content to load
-        sleep(3)
+        XCTAssertTrue(waitForUIKitContentToLoad(), "UIKit characters should load before filtering")
 
         // Test filtering in UIKit implementation
-        let aliveFilter = app.staticTexts["Alive"]
-        if aliveFilter.waitForExistence(timeout: 5) {
-            aliveFilter.tap()
-            sleep(2) // Wait for filter to apply
+        if tapFilterIfExists(AccessibilityId.filterAlive) {
+            XCTAssertTrue(waitForUIKitContentToLoad(), "Alive filter should load results")
         }
 
-        let deadFilter = app.staticTexts["Dead"]
-        if deadFilter.waitForExistence(timeout: 5) {
-            deadFilter.tap()
-            sleep(2) // Wait for filter to apply
+        if tapFilterIfExists(AccessibilityId.filterDead) {
+            XCTAssertTrue(waitForUIKitContentToLoad(), "Dead filter should load results")
         }
 
-        let unknownFilter = app.staticTexts["Unknown"]
-        if unknownFilter.waitForExistence(timeout: 5) {
-            unknownFilter.tap()
-            sleep(2) // Wait for filter to apply
-            // Test clearing filter
-            unknownFilter.tap()
-            sleep(2) // Wait for filter to clear
+        if tapFilterIfExists(AccessibilityId.filterUnknown) {
+            XCTAssertTrue(waitForUIKitContentToLoad(), "Unknown filter should load results")
+            tapFilterIfExists(AccessibilityId.filterUnknown)
+            XCTAssertTrue(waitForUIKitContentToLoad(), "Clearing filter should reload results")
         }
 
         // Verify UIKit list (UITableView/UICollectionView) is still functional
-        let table = app.tables.firstMatch
-        let collection = app.collectionViews.firstMatch
-        let hasList = table.waitForExistence(timeout: 10) || collection.waitForExistence(timeout: 10)
-        XCTAssertTrue(hasList, "Expected a table or collection view to be visible after filtering")
-
-        let list = table.exists ? table : collection
-        XCTAssertTrue(list.exists, "List should exist after filtering")
-
-        // Wait for list to become interactive
-        sleep(2)
+        let table = app.tables[AccessibilityId.charactersTableView]
+        let list = table.exists ? table : app.collectionViews.firstMatch
+        XCTAssertTrue(list.waitForExistence(timeout: 10), "Expected a table or collection view to be visible after filtering")
 
         if list.isHittable {
             list.swipeUp()
@@ -282,8 +302,10 @@ final class RickMortyUITests: XCTestCase {
             sleep(1)
         }
 
-        let cells = list.cells
-        XCTAssertTrue(cells.count > 0 || list.isHittable, "List should have cells or be hittable after filtering")
+        let cards = list
+            .descendants(matching: .any)
+            .matching(identifier: AccessibilityId.characterCard)
+        XCTAssertTrue(cards.count > 0 || list.isHittable, "List should have cards or be hittable after filtering")
     }
     
     // MARK: - Additional Focused Tests

@@ -31,6 +31,8 @@ public struct FiltersView: View {
                         )
                         .foregroundColor(selectedFilter == filter ? .white : .primary)
                         .clipShape(Capsule())
+                        .accessibilityIdentifier(accessibilityIdentifier(for: filter))
+                        .accessibilityAddTraits(.isButton)
                         .onTapGesture {
                             if selectedFilter == filter {
                                 selectedFilter = nil
@@ -52,6 +54,14 @@ public struct FiltersView: View {
         case .alive: return "Alive"
         case .dead: return "Dead"
         case .unknown: return "Unknown"
+        }
+    }
+
+    private func accessibilityIdentifier(for filter: FilterAdapter) -> String {
+        switch filter {
+        case .alive: return "filterAlive"
+        case .dead: return "filterDead"
+        case .unknown: return "filterUnknown"
         }
     }
 }
