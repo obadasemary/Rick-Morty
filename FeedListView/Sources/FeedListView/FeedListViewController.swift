@@ -38,6 +38,8 @@ class FeedListViewController: UITableViewController, UITableViewDataSourcePrefet
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationController?.navigationBar.barTintColor = .systemBackground
         navigationItem.largeTitleDisplayMode = .always
+
+        tableView.accessibilityIdentifier = "charactersTableView"
         
         startObservingViewModel()
         
