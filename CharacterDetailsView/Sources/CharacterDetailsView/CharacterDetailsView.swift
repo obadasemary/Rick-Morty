@@ -47,6 +47,8 @@ public struct CharacterDetailsView: View {
                                     .frame(height: 35)
                             }
                         )
+                        .accessibilityIdentifier("characterDetailsBackButton")
+                        .accessibilityLabel("Back")
                         .padding(.leading, 16)
                         .padding(.top, 16)
                         .padding(

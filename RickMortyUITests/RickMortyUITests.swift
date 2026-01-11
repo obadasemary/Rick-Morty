@@ -10,6 +10,12 @@ import XCTest
 final class RickMortyUITests: XCTestCase {
 
     private var app: XCUIApplication!
+    
+    private enum AccessibilityId {
+        static let charactersScrollView = "charactersScrollView"
+        static let characterCard = "characterCard"
+        static let characterDetailsBackButton = "characterDetailsBackButton"
+    }
 
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -37,37 +43,61 @@ final class RickMortyUITests: XCTestCase {
     }
 
     /// Waits for network-loaded content by checking for scroll view children
-    private func waitForContentToLoad(timeout: TimeInterval = 10) {
-        let scrollView = app.scrollViews.firstMatch
-        guard scrollView.waitForExistence(timeout: timeout) else { return }
+    private func waitForContentToLoad(timeout: TimeInterval = 10) -> Bool {
+        let scrollView = app.scrollViews[AccessibilityId.charactersScrollView]
+        guard scrollView.waitForExistence(timeout: timeout) else { return false }
 
-        // Wait a bit for network content to populate
-        sleep(2)
+        let firstCard = scrollView
+            .descendants(matching: .any)
+            .matching(identifier: AccessibilityId.characterCard)
+            .firstMatch
+
+        return firstCard.waitForExistence(timeout: timeout)
     }
 
     /// Safely taps a character card in the scroll view
-    private func tapFirstCharacterCard() -> Bool {
-        let scrollView = app.scrollViews.firstMatch
-        guard scrollView.waitForExistence(timeout: 5) else { return false }
+    private func tapFirstCharacterCard(timeout: TimeInterval = 10) -> Bool {
+        let scrollView = app.scrollViews[AccessibilityId.charactersScrollView]
+        guard scrollView.waitForExistence(timeout: timeout) else { return false }
 
-        // Wait for content to load
-        sleep(2)
+        let firstCard = scrollView
+            .descendants(matching: .any)
+            .matching(identifier: AccessibilityId.characterCard)
+            .firstMatch
 
-        // Try to find any tappable element within the scroll view
-        // Look for images (character avatars) which are more reliable tap targets
-        let images = scrollView.images
-        if images.count > 0 {
-            let firstImage = images.element(boundBy: 0)
-            if firstImage.isHittable {
-                firstImage.tap()
-                return true
-            }
+        guard firstCard.waitForExistence(timeout: timeout) else { return false }
+        firstCard.tap()
+        return true
+    }
+    
+    @discardableResult
+    private func tapBackButton(timeout: TimeInterval = 5) -> Bool {
+        let customBack = app.buttons[AccessibilityId.characterDetailsBackButton]
+        if customBack.waitForExistence(timeout: timeout) {
+            customBack.tap()
+            return true
         }
 
-        // Fallback: tap at a specific coordinate within the scroll view
-        let coordinate = scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3))
-        coordinate.tap()
-        return true
+        let navBack = app.navigationBars.buttons.element(boundBy: 0)
+        if navBack.waitForExistence(timeout: 2) {
+            navBack.tap()
+            return true
+        }
+
+        let arrowBack = app.buttons["arrow.left"]
+        if arrowBack.waitForExistence(timeout: 2) {
+            arrowBack.tap()
+            return true
+        }
+
+        let labeledBack = app.buttons["Back"]
+        if labeledBack.waitForExistence(timeout: 2) {
+            labeledBack.tap()
+            return true
+        }
+
+        app.swipeRight()
+        return false
     }
 
 
@@ -79,15 +109,13 @@ final class RickMortyUITests: XCTestCase {
 
     func testNavigateBackFromScrollView() throws {
         // Wait for content to load
-        waitForContentToLoad()
+        XCTAssertTrue(waitForContentToLoad(), "Characters should load before navigation")
 
         // Navigate to character details from scroll view using reliable tap
         XCTAssertTrue(tapFirstCharacterCard(), "Should be able to tap a character card")
 
         // Verify we can navigate back
-        let backButton = app.buttons["arrow.left"]
-        XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Back button should be visible")
-        backButton.tap()
+        XCTAssertTrue(tapBackButton(), "Back button should be visible")
 
         // Verify we're back to the main screen
         let charactersTitle = app.navigationBars.staticTexts["Characters"]
@@ -135,14 +163,8 @@ final class RickMortyUITests: XCTestCase {
         }
         cell.tap()
 
-        // Navigate back: try explicit arrow, then nav bar button, then edge-swipe
-        if app.buttons["arrow.left"].waitForExistence(timeout: 2) {
-            app.buttons["arrow.left"].tap()
-        } else if app.navigationBars.buttons.element(boundBy: 0).exists {
-            app.navigationBars.buttons.element(boundBy: 0).tap()
-        } else {
-            app.swipeRight()
-        }
+        // Navigate back
+        tapBackButton(timeout: 2)
 
         // Verify we're back on the UIKit tab
         XCTAssertTrue(uiKitTab.waitForExistence(timeout: 2), "UIKit tab should exist after navigating back")
@@ -169,15 +191,15 @@ final class RickMortyUITests: XCTestCase {
         unknownFilter.tap()
         
         // Verify we can still see characters after filtering
-        let scrollView = app.scrollViews.firstMatch
+        let scrollView = app.scrollViews[AccessibilityId.charactersScrollView]
         XCTAssertTrue(scrollView.waitForExistence(timeout: 3), "Scroll view should be visible after filtering")
     }
     
     func testFeedViewSwiftUIWithScroll() throws {
         // Wait for content to load
-        waitForContentToLoad()
+        XCTAssertTrue(waitForContentToLoad(), "Characters should load before scrolling")
 
-        let scrollView = app.scrollViews.firstMatch
+        let scrollView = app.scrollViews[AccessibilityId.charactersScrollView]
         XCTAssertTrue(scrollView.waitForExistence(timeout: 5), "Scroll view should be visible")
 
         // Test horizontal scrolling
@@ -195,9 +217,7 @@ final class RickMortyUITests: XCTestCase {
         // Test character selection and navigation using reliable tap
         XCTAssertTrue(tapFirstCharacterCard(), "Should be able to tap a character card")
 
-        let backButton = app.buttons["arrow.left"]
-        XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Back button should be visible")
-        backButton.tap()
+        XCTAssertTrue(tapBackButton(), "Back button should be visible")
 
         // Verify we're back to the main screen
         let charactersTitle = app.navigationBars.staticTexts["Characters"]
@@ -320,7 +340,9 @@ final class RickMortyUITests: XCTestCase {
     }
     
     func testCharacterListScrolling() throws {
-        let scrollView = app.scrollViews.firstMatch
+        XCTAssertTrue(waitForContentToLoad(), "Characters should load before scrolling")
+
+        let scrollView = app.scrollViews[AccessibilityId.charactersScrollView]
         XCTAssertTrue(scrollView.waitForExistence(timeout: 3), "Scroll view should be visible")
         
         // Test vertical scrolling for pagination
@@ -338,7 +360,7 @@ final class RickMortyUITests: XCTestCase {
     
     func testFilterStatePersistence() throws {
         // Wait for initial content to load
-        waitForContentToLoad()
+        XCTAssertTrue(waitForContentToLoad(), "Characters should load before filtering")
 
         // Test that filter state is maintained during navigation
         let aliveFilter = app.staticTexts["Alive"]
@@ -346,15 +368,13 @@ final class RickMortyUITests: XCTestCase {
         aliveFilter.tap()
 
         // Wait for filter to apply and content to reload
-        sleep(3)
+        XCTAssertTrue(waitForContentToLoad(), "Filtered characters should load")
 
         // Navigate to character details using reliable tap
         XCTAssertTrue(tapFirstCharacterCard(), "Should be able to tap a character card after filtering")
 
         // Navigate back
-        let backButton = app.buttons["arrow.left"]
-        XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Back button should be visible")
-        backButton.tap()
+        XCTAssertTrue(tapBackButton(), "Back button should be visible")
 
         // Verify we're back to the filtered view
         let charactersTitle = app.navigationBars.staticTexts["Characters"]

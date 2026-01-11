@@ -68,6 +68,9 @@ public struct CharacterView: View {
         )
         .padding(.horizontal)
         .padding(.top, 8)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("characterCard")
+        .accessibilityAddTraits(.isButton)
     }
     
     private var backgroundColor: Color {

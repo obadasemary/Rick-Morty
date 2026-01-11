@@ -68,6 +68,7 @@ struct FeedView: View {
                 }
             }
         }
+        .accessibilityIdentifier("charactersScrollView")
         .refreshable {
             viewModel.refreshData()
         }
