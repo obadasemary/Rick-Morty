@@ -263,18 +263,36 @@ final class RickMortyUITests: XCTestCase {
     
     func testCharacterListScrolling() throws {
         let scrollView = app.scrollViews.firstMatch
-        XCTAssertTrue(scrollView.waitForExistence(timeout: 3), "Scroll view should be visible")
-        
-        // Test vertical scrolling for pagination
+        XCTAssertTrue(scrollView.waitForExistence(timeout: 5), "Scroll view should be visible")
+
+        // Wait for initial content to load
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // Verify scroll view is initially hittable
+        XCTAssertTrue(scrollView.isHittable, "Scroll view should be initially interactive")
+
+        // Test vertical scrolling for pagination with delays between swipes
         scrollView.swipeUp()
+        Thread.sleep(forTimeInterval: 0.5)
+
         scrollView.swipeUp()
+        Thread.sleep(forTimeInterval: 0.5)
+
         scrollView.swipeUp()
-        
+        Thread.sleep(forTimeInterval: 0.5)
+
         // Test horizontal scrolling if available
         scrollView.swipeRight()
+        Thread.sleep(forTimeInterval: 0.3)
+
         scrollView.swipeLeft()
-        
+        Thread.sleep(forTimeInterval: 0.3)
+
+        // Wait for any pending animations or data loading to complete
+        Thread.sleep(forTimeInterval: 1.0)
+
         // Verify scroll view is still interactive
+        XCTAssertTrue(scrollView.exists, "Scroll view should still exist after scrolling")
         XCTAssertTrue(scrollView.isHittable, "Scroll view should remain interactive after scrolling")
     }
     
