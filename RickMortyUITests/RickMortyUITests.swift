@@ -50,6 +50,17 @@ final class RickMortyUITests: XCTestCase {
         app.descendants(matching: .any).matching(identifier: identifier).firstMatch
     }
 
+    @discardableResult
+    private func selectSwiftUITabIfPresent(timeout: TimeInterval = 5) -> Bool {
+        let tabBar = app.tabBars.firstMatch
+        guard tabBar.waitForExistence(timeout: timeout) else { return false }
+
+        let swiftUITab = tabBar.buttons["SwiftUI"]
+        guard swiftUITab.waitForExistence(timeout: timeout) else { return false }
+        swiftUITab.tap()
+        return swiftUITab.isSelected
+    }
+
     /// Waits for network-loaded content by checking for scroll view children
     private func waitForContentToLoad(timeout: TimeInterval = 10) -> Bool {
         let scrollView = app.scrollViews[AccessibilityId.charactersScrollView]
@@ -78,6 +89,16 @@ final class RickMortyUITests: XCTestCase {
         return true
     }
 
+    private func tapFirstCharacterCard(in list: XCUIElement, timeout: TimeInterval = 10) -> Bool {
+        let firstCard = list
+            .descendants(matching: .any)
+            .matching(identifier: AccessibilityId.characterCard)
+            .firstMatch
+        guard firstCard.waitForExistence(timeout: timeout) else { return false }
+        firstCard.tap()
+        return true
+    }
+
     private func waitForUIKitContentToLoad(timeout: TimeInterval = 12) -> Bool {
         let table = app.tables[AccessibilityId.charactersTableView]
         if table.waitForExistence(timeout: timeout) {
@@ -99,9 +120,14 @@ final class RickMortyUITests: XCTestCase {
 
     @discardableResult
     private func tapFilterIfExists(_ identifier: String, timeout: TimeInterval = 5) -> Bool {
-        let filter = element(with: identifier)
-        guard filter.waitForExistence(timeout: timeout) else { return false }
-        filter.tap()
+        let matches = app.descendants(matching: .any).matching(identifier: identifier)
+        guard matches.firstMatch.waitForExistence(timeout: timeout) else { return false }
+
+        let hittable = (0..<matches.count)
+            .map { matches.element(boundBy: $0) }
+            .first(where: { $0.isHittable })
+        let target = hittable ?? matches.firstMatch
+        target.tap()
         return true
     }
     
@@ -137,12 +163,16 @@ final class RickMortyUITests: XCTestCase {
 
 
     func testSwiftUITabLoadsCharactersScreen() throws {
+        XCTAssertTrue(selectSwiftUITabIfPresent(), "SwiftUI tab should be selectable")
+
         // Assert that the main Characters screen is visible.
         let charactersTitle = app.navigationBars.staticTexts["Characters"]
         XCTAssertTrue(charactersTitle.waitForExistence(timeout: 5), "Characters screen should appear after launch")
     }
 
     func testNavigateBackFromScrollView() throws {
+        XCTAssertTrue(selectSwiftUITabIfPresent(), "SwiftUI tab should be selectable")
+
         // Wait for content to load
         XCTAssertTrue(waitForContentToLoad(), "Characters should load before navigation")
 
@@ -177,26 +207,17 @@ final class RickMortyUITests: XCTestCase {
         uiKitTab.tap()
         XCTAssertTrue(uiKitTab.isSelected, "UIKit tab should be selected")
 
-        // Wait for either a table or a collection view on the UIKit tab
-        let table = app.tables.firstMatch
-        let collection = app.collectionViews.firstMatch
-        let hasList = table.waitForExistence(timeout: 5) || collection.waitForExistence(timeout: 5)
-        XCTAssertTrue(hasList, "Expected a table or collection view on the UIKit tab")
+        XCTAssertTrue(waitForUIKitContentToLoad(), "UIKit characters should load before selection")
 
-        // Choose whichever exists
-        let list = table.exists ? table : collection
+        let table = app.tables[AccessibilityId.charactersTableView]
+        let list = table.exists ? table : app.collectionViews.firstMatch
+        XCTAssertTrue(list.waitForExistence(timeout: 5), "Expected a list on the UIKit tab")
 
-        // Nudge the list to ensure cells load
-        if list.exists && list.isHittable {
+        if list.isHittable {
             list.swipeUp()
         }
 
-        // Tap the first visible cell
-        let cell = list.cells.firstMatch
-        guard cell.waitForExistence(timeout: 5) else {
-            throw XCTSkip("No cells found on the UIKit list")
-        }
-        cell.tap()
+        XCTAssertTrue(tapFirstCharacterCard(in: list), "Should be able to tap a character card in UIKit list")
 
         // Navigate back
         tapBackButton(timeout: 2)
@@ -207,23 +228,24 @@ final class RickMortyUITests: XCTestCase {
     }
     
     func testFeedViewWithFilter() throws {
+        XCTAssertTrue(selectSwiftUITabIfPresent(), "SwiftUI tab should be selectable")
+        XCTAssertTrue(waitForContentToLoad(), "Characters should load before filtering")
+
         // Test Alive filter
-        let aliveFilter = app.staticTexts["Alive"]
-        XCTAssertTrue(aliveFilter.waitForExistence(timeout: 3), "Alive filter should be visible")
-        aliveFilter.tap()
+        XCTAssertTrue(tapFilterIfExists(AccessibilityId.filterAlive), "Alive filter should be visible")
+        XCTAssertTrue(waitForContentToLoad(), "Alive filter should load results")
         
         // Test Dead filter
-        let deadFilter = app.staticTexts["Dead"]
-        XCTAssertTrue(deadFilter.waitForExistence(timeout: 3), "Dead filter should be visible")
-        deadFilter.tap()
+        XCTAssertTrue(tapFilterIfExists(AccessibilityId.filterDead), "Dead filter should be visible")
+        XCTAssertTrue(waitForContentToLoad(), "Dead filter should load results")
         
         // Test Unknown filter
-        let unknownFilter = app.staticTexts["Unknown"]
-        XCTAssertTrue(unknownFilter.waitForExistence(timeout: 3), "Unknown filter should be visible")
-        unknownFilter.tap()
+        XCTAssertTrue(tapFilterIfExists(AccessibilityId.filterUnknown), "Unknown filter should be visible")
+        XCTAssertTrue(waitForContentToLoad(), "Unknown filter should load results")
         
         // Test clearing filter (tap again)
-        unknownFilter.tap()
+        XCTAssertTrue(tapFilterIfExists(AccessibilityId.filterUnknown), "Unknown filter should be tappable to clear")
+        XCTAssertTrue(waitForContentToLoad(), "Clearing filter should reload results")
         
         // Verify we can still see characters after filtering
         let scrollView = app.scrollViews[AccessibilityId.charactersScrollView]
@@ -231,6 +253,8 @@ final class RickMortyUITests: XCTestCase {
     }
     
     func testFeedViewSwiftUIWithScroll() throws {
+        XCTAssertTrue(selectSwiftUITabIfPresent(), "SwiftUI tab should be selectable")
+
         // Wait for content to load
         XCTAssertTrue(waitForContentToLoad(), "Characters should load before scrolling")
 
@@ -362,6 +386,7 @@ final class RickMortyUITests: XCTestCase {
     }
     
     func testCharacterListScrolling() throws {
+        XCTAssertTrue(selectSwiftUITabIfPresent(), "SwiftUI tab should be selectable")
         XCTAssertTrue(waitForContentToLoad(), "Characters should load before scrolling")
 
         let scrollView = app.scrollViews[AccessibilityId.charactersScrollView]
@@ -381,13 +406,13 @@ final class RickMortyUITests: XCTestCase {
     }
     
     func testFilterStatePersistence() throws {
+        XCTAssertTrue(selectSwiftUITabIfPresent(), "SwiftUI tab should be selectable")
+
         // Wait for initial content to load
         XCTAssertTrue(waitForContentToLoad(), "Characters should load before filtering")
 
         // Test that filter state is maintained during navigation
-        let aliveFilter = app.staticTexts["Alive"]
-        XCTAssertTrue(aliveFilter.waitForExistence(timeout: 5), "Alive filter should be visible")
-        aliveFilter.tap()
+        XCTAssertTrue(tapFilterIfExists(AccessibilityId.filterAlive), "Alive filter should be visible")
 
         // Wait for filter to apply and content to reload
         XCTAssertTrue(waitForContentToLoad(), "Filtered characters should load")
@@ -403,7 +428,7 @@ final class RickMortyUITests: XCTestCase {
         XCTAssertTrue(charactersTitle.waitForExistence(timeout: 5), "Should return to Characters screen")
 
         // Verify filter is still active (filter button should still be visible)
-        XCTAssertTrue(aliveFilter.waitForExistence(timeout: 3), "Alive filter should still be visible after navigation")
+        XCTAssertTrue(element(with: AccessibilityId.filterAlive).waitForExistence(timeout: 3), "Alive filter should still be visible after navigation")
     }
 
     @MainActor
