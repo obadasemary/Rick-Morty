@@ -17,6 +17,7 @@ xcuserdata/
 ## Compatibility with Xcode 3 and earlier (save directory)
 DerivedData/
 *.moved-aside
+*.xcresult/
 *.pbxuser
 !default.pbxuser
 *.mode1v3

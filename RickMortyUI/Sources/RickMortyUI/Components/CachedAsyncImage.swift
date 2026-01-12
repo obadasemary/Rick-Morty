@@ -73,7 +73,7 @@ public struct CachedAsyncImage<Content: View>: View {
         cancelLoad()
 
         guard let url = url else {
-            updatePhase(.empty)
+            updatePhase(.failure(URLError(.badURL)))
             return
         }
 
