@@ -10,6 +10,9 @@ import XCTest
 final class RickMortyUITests: XCTestCase {
 
     private var app: XCUIApplication!
+    private var isCI: Bool {
+        ProcessInfo.processInfo.environment["CI"] != nil
+    }
     
     private enum AccessibilityId {
         static let charactersScrollView = "charactersScrollView"
@@ -433,6 +436,7 @@ final class RickMortyUITests: XCTestCase {
 
     @MainActor
     func testLaunchPerformance() throws {
+        try XCTSkipIf(isCI, "Skipping launch performance in CI to avoid simulator instrumentation timeouts.")
         // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {
             XCUIApplication().launch()

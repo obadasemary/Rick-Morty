@@ -141,6 +141,7 @@ jobs:
             -workspace "RickMorty.xcworkspace" \
             -scheme "RickMorty" \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -parallel-testing-enabled NO \
             -skipMacroValidation \
             -only-testing:RickMortyUITests \
             -skip-testing:RickMortyUITests/RickMortyUITestsLaunchTests \
