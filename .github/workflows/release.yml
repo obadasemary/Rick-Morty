@@ -17,7 +17,7 @@ env:
 jobs:
   # Run tests before release
   test:
-    runs-on: macos-latest
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
 
@@ -45,13 +45,13 @@ jobs:
           xcodebuild \
             -workspace "RickMorty.xcworkspace" \
             -scheme "RickMorty" \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
             -skipMacroValidation \
             test
 
   # Build for release
   build:
-    runs-on: macos-latest
+    runs-on: macos-26
     needs: test
     steps:
       - uses: actions/checkout@v4
@@ -70,14 +70,14 @@ jobs:
           xcodebuild \
             -workspace "RickMorty.xcworkspace" \
             -scheme "RickMorty" \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
             -skipMacroValidation \
             -configuration Release \
             clean build
 
   # Create release
   release:
-    runs-on: macos-latest
+    runs-on: macos-26
     needs: [test, build]
     steps:
       - uses: actions/checkout@v4
