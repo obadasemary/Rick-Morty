@@ -15,8 +15,8 @@ A modern iOS app built with SwiftUI and Clean Architecture, displaying Rick and 
 # Open workspace (required - do not open the .xcodeproj)
 open RickMorty.xcworkspace
 
-# Build from command line (using iPhone 15 Pro simulator as in CI)
-xcodebuild -workspace RickMorty.xcworkspace -scheme RickMorty -destination 'platform=iOS Simulator,name=iPhone 15 Pro' build
+# Build from command line (using iPhone 17 Pro simulator as in CI)
+xcodebuild -workspace RickMorty.xcworkspace -scheme RickMorty -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' build
 
 # Build specific package
 xcodebuild -workspace RickMorty.xcworkspace -scheme UseCase build
@@ -28,10 +28,10 @@ cd UseCase && swift build
 ### Running Tests
 ```bash
 # Run all unit tests from command line
-xcodebuild test -workspace RickMorty.xcworkspace -scheme RickMorty -destination 'platform=iOS Simulator,name=iPhone 15 Pro' -only-testing:RickMortyTests
+xcodebuild test -workspace RickMorty.xcworkspace -scheme RickMorty -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' -only-testing:RickMortyTests
 
 # Run UI tests (note: these are non-blocking in CI due to timeout risks)
-xcodebuild test -workspace RickMorty.xcworkspace -scheme RickMorty -destination 'platform=iOS Simulator,name=iPhone 15 Pro' -only-testing:RickMortyUITests -parallel-testing-enabled NO
+xcodebuild test -workspace RickMorty.xcworkspace -scheme RickMorty -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' -only-testing:RickMortyUITests -parallel-testing-enabled NO
 
 # Run tests for a specific package using SPM
 cd UseCase && swift test
@@ -48,13 +48,18 @@ cd RickMortyNetworkLayer && swift test
 ```
 
 ### CI/CD
+
 The project uses GitHub Actions with a comprehensive CI pipeline ([.github/workflows/ci.yml](.github/workflows/ci.yml)) that:
+
+- Runs on **macOS 26** runners with **Xcode 26.0.1**
+- Uses **iPhone 17 Pro** simulator for all tests
 - Runs unit tests on the main app
 - Tests individual SPM packages in a matrix
 - Performs integration build tests
 - Runs UI tests (with timeout protection and non-blocking mode)
 - Validates Package.swift files and SPM dependencies
 - Uses module cache cleaning to prevent stale header issues
+- Lists available simulators for debugging
 
 ## Architecture Overview
 
