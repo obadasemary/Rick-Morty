@@ -251,6 +251,12 @@ jobs:
       - name: Select Xcode 26.0.1
         run: sudo xcode-select -s /Applications/Xcode_26.0.1.app/Contents/Developer
 
+      - name: List available simulators
+        run: |
+          echo "::group::Available simulators"
+          xcrun simctl list devices available
+          echo "::endgroup::"
+
       - name: Clean Module Cache
         run: |
           echo "::group::Cleaning Module Cache"
