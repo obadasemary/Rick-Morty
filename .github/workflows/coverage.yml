@@ -19,7 +19,7 @@ env:
 jobs:
   # Generate code coverage for main app
   app-coverage:
-    runs-on: macos-latest
+    runs-on: macos-26
     if: ${{ !inputs.skip_coverage }}
     steps:
       - uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
           xcodebuild \
             -workspace "RickMorty.xcworkspace" \
             -scheme "RickMorty" \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
             -skipMacroValidation \
             -enableCodeCoverage YES \
             -only-testing:RickMortyTests \
@@ -60,7 +60,7 @@ jobs:
 
   # Generate code coverage for Swift packages
   packages-coverage:
-    runs-on: macos-latest
+    runs-on: macos-26
     if: ${{ !inputs.skip_coverage }}
     strategy:
       matrix:
@@ -104,7 +104,7 @@ jobs:
 
   # Coverage summary and quality gates
   coverage-summary:
-    runs-on: macos-latest
+    runs-on: macos-26
     needs: [app-coverage, packages-coverage]
     continue-on-error: true
     steps:

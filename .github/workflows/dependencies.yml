@@ -12,7 +12,7 @@ env:
 jobs:
   # Check for dependency updates
   dependency-check:
-    runs-on: macos-latest
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
 
@@ -46,7 +46,7 @@ jobs:
 
   # Security audit
   security-audit:
-    runs-on: macos-latest
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
 
@@ -71,7 +71,7 @@ jobs:
 
   # Dependency update PR
   update-dependencies:
-    runs-on: macos-latest
+    runs-on: macos-26
     if: github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
