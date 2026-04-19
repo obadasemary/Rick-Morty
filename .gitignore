@@ -3,7 +3,10 @@ settings.local.json
 *.local.json
 
 # Claude Code configuration
-.claude/
+.claude/*
+!.claude/skills/
+!.claude/commands/
+.claude/settings.local.json
 
 # Xcode
 ## User settings
