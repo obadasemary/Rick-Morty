@@ -17,17 +17,18 @@
 
 ## Overview
 
-**RickMorty** is a native iOS application built with **Swift 6.0** and **SwiftUI**, following **Clean Architecture** principles. The app displays characters from the Rick and Morty API with features including infinite scroll pagination, status filtering, and detailed character views.
+**RickMorty** is a native iOS application built with **Swift 6.2+** following **Clean Architecture** principles. The app displays characters from the Rick and Morty API with infinite scroll pagination, status filtering, and detail screens — and deliberately implements the character list twice: once in SwiftUI (`FeedView`) and once in UIKit (`FeedListViewController`), sharing the same business logic layer.
 
 ### Technology Stack
-- **Language**: Swift 6.0 (strict concurrency enabled)
-- **UI Framework**: SwiftUI with `@Observable` macro
-- **Minimum Deployment**: iOS 17.0+
-- **Build System**: Xcode 16.4+
-- **Dependency Management**: Swift Package Manager (SPM)
+
+- **Language**: Swift 6.1+ (strict concurrency enabled)
+- **UI Framework**: SwiftUI + UIKit hybrid with `@Observable` macro
+- **Minimum Deployment**: iOS 17.0+ (packages) / iOS 18.5 (main app target)
+- **Build System**: Xcode 16+
+- **Dependency Management**: Swift Package Manager (11 local packages)
 - **Architecture**: Clean Architecture with modular design
-- **Routing**: SUIRouting (v1.0.7)
-- **Testing**: Swift Testing Framework
+- **Routing**: SUIRouting (v1.0.6)
+- **Testing**: Swift Testing Framework (`@Test`, `@Suite`)
 
 ---
 
@@ -39,23 +40,70 @@ The application strictly follows Clean Architecture, separating concerns into di
 **Dependency Rule**: Dependencies point inward. Outer layers depend on inner layers, never the reverse.
 
 ```
-┌─────────────────────────────────────────────┐
-│   Presentation Layer (Views & ViewModels)  │
-│   (FeedView, CharacterDetailsView, etc.)   │
-└──────────────────┬──────────────────────────┘
-                   │ depends on
-                   ↓
-┌─────────────────────────────────────────────┐
-│      Business Logic Layer (Use Cases)       │
-│         (FeedUseCase, protocols)            │
-└──────────────────┬──────────────────────────┘
-                   │ depends on
-                   ↓
-┌─────────────────────────────────────────────┐
-│          Data Layer (Repository)            │
-│  (RickMortyRepository, RickMortyNetworkLayer)│
-└─────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                        Main App                          │
+│   RickMorty/App/{RickMortyApp, AppDelegate,             │
+│                  AppComposition}.swift                   │
+└────────────────────────┬─────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────────┐
+│                      TabBarView                          │
+└──────────────┬───────────────────────────────┬───────────┘
+               │                               │
+               ▼                               ▼
+  ┌─────────────────────┐         ┌─────────────────────────┐
+  │      FeedView       │         │      FeedListView        │
+  │      (SwiftUI)      │         │      (UIKit)             │
+  └──────────┬──────────┘         └────────────┬────────────┘
+             │                                 │
+             └──────────────┬──────────────────┘
+                            │ both depend on:
+                            ▼
+             ┌────────────────────────────────┐
+             │     CharacterDetailsView       │
+             │     DependencyContainer        │
+             │     DevPreview                 │
+             │     RickMortyUI                │
+             │     SUIRouting (external)      │
+             └──────────────┬─────────────────┘
+                            │
+                            ▼
+                   ┌─────────────────┐
+                   │    UseCase      │
+                   │  (protocols,    │
+                   │   DTOs,         │
+                   │   adapters)     │
+                   └────────┬────────┘
+                            │
+                            ▼
+             ┌──────────────────────────────┐
+             │      RickMortyRepository     │
+             └───────────┬──────────────────┘
+                         │
+              ┌──────────┴────────────┐
+              ▼                       ▼
+  ┌────────────────────────┐  ┌──────────────────┐
+  │  RickMortyNetworkLayer │  │    CoreAPI       │
+  │  (URLSession, no deps) │  │ (RickMortyEndpt) │
+  └────────────────────────┘  └──────────────────┘
 ```
+
+**Package reference table:**
+
+| Package | Key Types | Responsibility |
+| --- | --- | --- |
+| `RickMortyNetworkLayer` | `NetworkService`, `URLSessionNetworkService`, `Endpoint`, `NetworkError` | Generic URLSession HTTP client |
+| `CoreAPI` | `RickMortyEndpoint` | Rick & Morty API endpoint definitions |
+| `DependencyContainer` | `DIContainer`, `DIError` | Service locator / DI |
+| `UseCase` | `FeedUseCase`, `FeedUseCaseProtocol`, `FeedRepositoryProtocol`, `CharacterAdapter`, `FeedError`, DTOs | Business logic + shared types |
+| `RickMortyRepository` | `FeedRepository` | Data-layer orchestration |
+| `RickMortyUI` | `CharacterView`, `CharacterTableViewCell`, `CachedAsyncImage`, `ImageCache`, `FiltersView`, `ErrorView` | Shared UI components |
+| `DevPreview` | `DevPreview` | DI container singleton for previews |
+| `CharacterDetailsView` | `CharacterDetailsBuilder`, `CharacterDetailsViewModel`, `CharacterDetailsView` | Detail screen |
+| `FeedView` | `FeedBuilder`, `FeedViewModel`, `FeedView`, `FeedRouter` | SwiftUI character list |
+| `FeedListView` | `FeedListBuilder`, `FeedListViewModel`, `FeedListViewController`, `FeedListTabView`, `FeedListRouter` | UIKit character list |
+| `TabBarView` | `TabBarBuilder`, `TabBarView` | Tab navigation shell |
 
 ### 2. Protocol-Oriented Design
 All inter-layer communication happens through protocols, enabling:
@@ -169,11 +217,12 @@ API endpoint definitions for Rick and Morty API.
 
 **Endpoints**:
 ```swift
-enum RickMortyEndpoint: Endpoint {
-    case characters(page: Int, status: String?)
-    // Add more as needed
+public enum RickMortyEndpoint: Endpoint {
+    case getCharacters(page: Int?, status: String?)
+    // Add new cases here as the API grows
 
-    var baseURL: String { "https://rickandmortyapi.com/api" }
+    public var baseURL: String { "https://rickandmortyapi.com/api" }
+    public var path: String { "/character" }
 }
 ```
 
@@ -237,16 +286,24 @@ Character list feature.
 - Status filtering (Alive, Dead, Unknown)
 - Error handling with retry
 
-**State Machine**:
+**ViewModel declaration pattern** (same in both `FeedViewModel` and `FeedListViewModel`):
 ```swift
-enum State {
-    case idle
-    case loading
-    case loaded([CharacterAdapter])
-    case error(FeedError)
-    case loadingMore([CharacterAdapter])
+@Observable   // macro must come first
+@MainActor
+final class FeedViewModel {
+    enum State {
+        case idle
+        case loading
+        case loaded([CharacterAdapter])
+        case error(FeedError)
+        case loadingMore([CharacterAdapter])
+    }
+    private(set) var state: State = .idle
+    // ...
 }
 ```
+
+Views use `@State var viewModel: FeedViewModel` — not `@StateObject` — because `@Observable` does not require `ObservableObject`.
 
 #### 7. **CharacterDetailsView**
 Character detail screen.
@@ -378,22 +435,30 @@ Every feature has a Builder class that composes views with dependencies.
 
 **Example**:
 ```swift
-@MainActor
 @Observable
-final class FeedBuilder {
+@MainActor
+public final class FeedBuilder {
     private let container: DIContainer
 
-    init(container: DIContainer) {
+    public init(container: DIContainer) {
         self.container = container
     }
 
-    func buildFeedView(router: FeedRouterProtocol) -> FeedView {
-        let useCase = try! container.requireResolve(FeedUseCaseProtocol.self)
-        let viewModel = FeedViewModel(useCase: useCase, router: router)
-        return FeedView(viewModel: viewModel)
+    public func buildFeedView(router: Router) -> some View {
+        FeedView(
+            viewModel: FeedViewModel(
+                feedUseCase: FeedUseCase(container: container),
+                router: FeedRouter(
+                    router: router,
+                    characterDetailsBuilder: CharacterDetailsBuilder(container: container)
+                )
+            )
+        )
     }
 }
 ```
+
+Note the declaration order: `@Observable` before `@MainActor`. Views hold builders via `@Environment(FeedBuilder.self)` — never accessed directly from the DI container.
 
 ### 2. State Machine Pattern
 ViewModels use enum-based state machines for clarity.
@@ -474,51 +539,64 @@ All abstractions are protocols, not base classes.
 ## Navigation
 
 ### SUIRouting Library
-The app uses the external **SUIRouting** library (v1.0.7) for declarative navigation.
+The app uses the external **SUIRouting** library (v1.0.6, pinned `.upToNextMajor(from: "1.0.6")`) for declarative navigation. Each tab is wrapped in `RouterView { router in ... }` which provides a `Router` value.
 
-**Pattern**:
+**Router protocol + implementation:**
 ```swift
+@MainActor
 protocol FeedRouterProtocol {
-    func navigateToDetails(character: CharacterAdapter)
+    func showCharacterDetails(characterDetailsAdapter: CharacterAdapter)
 }
 
-final class FeedRouter: FeedRouterProtocol {
-    private let router: Router // SUIRouting
+@MainActor
+struct FeedRouter: FeedRouterProtocol {
+    let router: Router                              // SUIRouting.Router
+    let characterDetailsBuilder: CharacterDetailsBuilder
 
-    func navigateToDetails(character: CharacterAdapter) {
-        router.push(CharacterDetailsView(character: character))
+    func showCharacterDetails(characterDetailsAdapter: CharacterAdapter) {
+        router.showScreen(.push) { innerRouter in
+            characterDetailsBuilder.buildCharacterDetailsView(
+                characterDetailsAdapter: characterDetailsAdapter,
+                backAction: { innerRouter.dismissScreen() }
+            )
+        }
     }
 }
 ```
 
-**Key Concepts**:
-- Routers are protocol-based
-- Injected into ViewModels
-- Use `Router` object from SUIRouting for actual navigation
+**Key Concepts:**
+
+- Router protocols (`FeedRouterProtocol`, `FeedListRouterProtocol`) are **internal** to their packages — ViewModels never see SUIRouting's `Router` type directly, enabling testing with `SpyRouter`
+- `router.showScreen(.push)` pushes onto the navigation stack; `innerRouter.dismissScreen()` pops it
+- `RouterView { router in ... }` is the SwiftUI integration point in `TabBarView`
+
+**Known limitation:** SUIRouting uses iOS-only APIs (`fullScreenCover`, `NavigationStack`). Building FeedView, FeedListView, or TabBarView packages on macOS fails. CI uses `continue-on-error: true` for those steps.
 
 ---
 
 ## State Management
 
 ### SwiftUI @Observable
-The app uses Swift 5.9+ `@Observable` macro instead of `ObservableObject`.
+The app uses the `@Observable` macro instead of `ObservableObject`. Declaration order matters — `@Observable` must come before `@MainActor`:
 
-**Usage**:
 ```swift
+@Observable   // macro first
 @MainActor
-@Observable
 final class FeedViewModel {
-    var state: State = .idle
-    var isLoading: Bool { /* computed */ }
-
-    // SwiftUI tracks changes automatically
+    private(set) var state: State = .idle
+    // SwiftUI tracks property reads automatically
 }
 ```
 
-**Benefits**:
-- Less boilerplate
-- Automatic change tracking
-- Better performance
+Views hold the ViewModel as `@State`, not `@StateObject`:
+
+```swift
+struct FeedView: View {
+    @State var viewModel: FeedViewModel
+}
+```
+
+**Benefits:** fine-grained change tracking (only accessed properties trigger re-renders), no `@Published` needed, works with Swift 6 strict concurrency.
 
 ### State Machine Pattern
 ViewModels manage state transitions explicitly:
@@ -533,12 +611,50 @@ state = .loading
 // Loaded successfully
 state = .loaded(characters)
 
-// Loading more pages
+// Loading more pages — preserves visible list while fetching
 state = .loadingMore(existingCharacters)
 
 // Error occurred
 state = .error(feedError)
 ```
+
+### UIKit + @Observable (Hybrid Integration)
+
+`FeedListView` demonstrates how `UIViewController` reacts to an `@Observable` ViewModel without Combine or `ObservableObject`. Two pieces make it work:
+
+**1. `FeedListTabView`** — a `UIViewControllerRepresentable` that bridges the UIKit stack into SwiftUI's `TabView`:
+
+```swift
+public struct FeedListTabView: UIViewControllerRepresentable {
+    let viewModel: FeedListViewModel
+
+    public func makeUIViewController(context: Context) -> UINavigationController {
+        let vc = FeedListViewController(viewModel: viewModel)
+        return UINavigationController(rootViewController: vc)
+    }
+
+    public func updateUIViewController(_ uiViewController: UINavigationController, context: Context) {}
+}
+```
+
+**2. `startObservingViewModel()`** — a recursive observation loop started in `viewDidLoad()`. `withObservationTracking(_:onChange:)` fires `onChange` exactly once per change, so the pattern re-registers itself after each update:
+
+```swift
+func startObservingViewModel() {
+    withObservationTracking {
+        _ = viewModel.state
+        _ = viewModel.characters
+        _ = viewModel.isLoadingMore
+    } onChange: { [weak self] in
+        Task { @MainActor in
+            self?.renderState()
+            self?.startObservingViewModel()  // re-register for the next change
+        }
+    }
+}
+```
+
+`Task { @MainActor in ... }` is required because `onChange` fires on an unspecified thread.
 
 ---
 
