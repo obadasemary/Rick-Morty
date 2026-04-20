@@ -29,7 +29,7 @@ Usage notes:
 
 <skill>
 <name>ios-clean-architecture</name>
-<description>Use when working on iOS/SwiftUI projects that follow Clean Architecture with SPM modules, a DIContainer, Builder pattern, and UseCase/Repository/NetworkService layers. Triggers on creating a new feature module, adding a network endpoint, wiring a ViewModel state machine, setting up dependency injection, or reviewing layer boundaries. Swift 6.2 / iOS 17+ / SwiftUI + @Observable.</description>
+<description>Modular Clean Architecture template for iOS apps built with SwiftUI and Swift Package Manager on Swift 6.2 with default main-actor isolation. Use when scaffolding a new iOS feature, organizing a SwiftUI app into layered SPM packages (NetworkService, Endpoints, Repositories, UseCases, DIContainer, feature views), applying protocol-first cross-module dependencies, wiring up Builder-based feature instantiation, or migrating ObservableObject code to @Observable with Swift 6 concurrency and Swift Testing.</description>
 <location>project</location>
 </skill>
 
