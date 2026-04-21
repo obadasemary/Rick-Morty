@@ -36,6 +36,12 @@ jobs:
           rm -rf ~/Library/Developer/Xcode/DerivedData/ModuleCache.noindex
           echo "✅ Module cache cleaned"
 
+      - name: Install iOS Simulator Runtime
+        run: |
+          echo "📦 Installing iOS Simulator runtime..."
+          xcodebuild -downloadPlatform iOS
+          echo "✅ iOS Simulator runtime installed"
+
       - name: Show Xcode version
         run: xcodebuild -version
 
@@ -140,6 +146,12 @@ jobs:
           key: ${{ runner.os }}-xcode-ui-tests-${{ hashFiles('**/*.xcodeproj/project.pbxproj', '**/*.xcworkspace/contents.xcworkspacedata') }}
           restore-keys: |
             ${{ runner.os }}-xcode-ui-tests-
+
+      - name: Install iOS Simulator Runtime
+        run: |
+          echo "📦 Installing iOS Simulator runtime..."
+          xcodebuild -downloadPlatform iOS
+          echo "✅ iOS Simulator runtime installed"
 
       - name: Clean Module Cache
         run: |
@@ -250,6 +262,12 @@ jobs:
 
       - name: Select Xcode 26.0.1
         run: sudo xcode-select -s /Applications/Xcode_26.0.1.app/Contents/Developer
+
+      - name: Install iOS Simulator Runtime
+        run: |
+          echo "📦 Installing iOS Simulator runtime..."
+          xcodebuild -downloadPlatform iOS
+          echo "✅ iOS Simulator runtime installed"
 
       - name: List available simulators
         run: |
